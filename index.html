@@ -52,24 +52,24 @@
                     class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer max-w-[140px] sm:max-w-[200px]">
                     <option value="mailtm">Mail.tm</option>
                     <option value="1secmail">1SecMail</option>
-                    <option value="guerrilla" disabled>Guerrilla Mail (proxy)</option>
-                    <option value="maildrop" disabled>Maildrop (proxy)</option>
-                    <option value="tempmailorg" disabled>Temp-Mail.org (proxy)</option>
-                    <option value="mailslurp" disabled>MailSlurp (proxy)</option>
-                    <option value="tempail" disabled>Tempail (proxy)</option>
-                    <option value="dispostable" disabled>Dispostable (proxy)</option>
-                    <option value="fakemail" disabled>FakeMail (proxy)</option>
-                    <option value="throwaway" disabled>ThrowAwayMail (proxy)</option>
-                    <option value="tempmailio" disabled>TempMail.io (proxy)</option>
-                    <option value="mohmal" disabled>Mohmal (proxy)</option>
-                    <option value="getnada" disabled>GetNada (proxy)</option>
-                    <option value="burnermail" disabled>BurnerMail (proxy)</option>
-                    <option value="emailondeck" disabled>EmailOnDeck (proxy)</option>
-                    <option value="tempmailo" disabled>TempMailo (proxy)</option>
-                    <option value="discard" disabled>DiscardEmail (proxy)</option>
-                    <option value="crazymailing" disabled>Crazymailing (proxy)</option>
-                    <option value="tempinbox" disabled>TempInbox (proxy)</option>
-                    <option value="boxmail" disabled>BoxMail (proxy)</option>
+                    <option value="guerrilla">Guerrilla Mail (proxy)</option>
+                    <option value="maildrop">Maildrop (proxy)</option>
+                    <option value="tempmailorg">Temp-Mail.org (proxy)</option>
+                    <option value="mailslurp">MailSlurp (proxy)</option>
+                    <option value="tempail">Tempail (proxy)</option>
+                    <option value="dispostable">Dispostable (proxy)</option>
+                    <option value="fakemail">FakeMail (proxy)</option>
+                    <option value="throwaway">ThrowAwayMail (proxy)</option>
+                    <option value="tempmailio">TempMail.io (proxy)</option>
+                    <option value="mohmal">Mohmal (proxy)</option>
+                    <option value="getnada">GetNada (proxy)</option>
+                    <option value="burnermail">BurnerMail (proxy)</option>
+                    <option value="emailondeck">EmailOnDeck (proxy)</option>
+                    <option value="tempmailo">TempMailo (proxy)</option>
+                    <option value="discard">DiscardEmail (proxy)</option>
+                    <option value="crazymailing">Crazymailing (proxy)</option>
+                    <option value="tempinbox">TempInbox (proxy)</option>
+                    <option value="boxmail">BoxMail (proxy)</option>
                 </select>
             </div>
         </div>
@@ -155,7 +155,7 @@
 
     <!-- Footer -->
     <footer class="border-t border-white/5 py-4 text-center text-[11px] text-neutral-700">
-        <p>Client-side only. No data stored. Powered by public APIs.</p>
+        <p>Client-side proxied via Vercel serverless functions. No data stored.</p>
     </footer>
 
     <!-- Toast -->
@@ -172,39 +172,48 @@
         let selectedId = null;
         let pollTimer = null;
 
+        // Proxy helper function
+        async function proxyFetch(url, options = {}) {
+            const proxyUrl = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
+            const res = await fetch(proxyUrl, {
+                method: options.method || 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    ...(options.headers?.Authorization ? { 'Authorization': options.headers.Authorization } : {})
+                },
+                ...(options.body ? { body: options.body } : {})
+            });
+            return res.json();
+        }
+
         // ==================== PROVIDERS ====================
         const providers = {
             mailtm: {
                 name: 'Mail.tm',
                 async generate() {
-                    const domRes = await fetch('https://api.mail.tm/domains');
-                    const domData = await domRes.json();
+                    const domData = await proxyFetch('https://api.mail.tm/domains');
                     const domain = domData['hydra:member'][0].domain;
                     const user = Math.random().toString(36).slice(2, 10);
                     const address = `${user}@${domain}`;
                     const password = 'x'.repeat(12);
 
-                    const regRes = await fetch('https://api.mail.tm/accounts', {
+                    const regRes = await fetch(`/api/proxy?targetUrl=${encodeURIComponent('https://api.mail.tm/accounts')}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ address, password })
                     });
                     if (!regRes.ok) throw new Error('Registration failed');
 
-                    const tokRes = await fetch('https://api.mail.tm/token', {
+                    const tokData = await proxyFetch('https://api.mail.tm/token', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ address, password })
                     });
-                    const tokData = await tokRes.json();
                     return { address, token: tokData.token, password };
                 },
                 async getMessages(acc) {
-                    const res = await fetch('https://api.mail.tm/messages', {
-                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                    const data = await proxyFetch('https://api.mail.tm/messages', {
+                        headers: { Authorization: `Bearer ${acc.token}` }
                     });
-                    if (res.status === 401) throw new Error('unauthorized');
-                    const data = await res.json();
                     return (data['hydra:member'] || []).map(m => ({
                         id: m.id,
                         from: m.from.name || m.from.address,
@@ -215,10 +224,9 @@
                     }));
                 },
                 async getMessage(acc, id) {
-                    const res = await fetch(`https://api.mail.tm/messages/${id}`, {
-                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                    const m = await proxyFetch(`https://api.mail.tm/messages/${id}`, {
+                        headers: { Authorization: `Bearer ${acc.token}` }
                     });
-                    const m = await res.json();
                     return {
                         id: m.id,
                         from: m.from.name || m.from.address,
@@ -231,9 +239,9 @@
                     };
                 },
                 async deleteMessage(acc, id) {
-                    await fetch(`https://api.mail.tm/messages/${id}`, {
+                    await proxyFetch(`https://api.mail.tm/messages/${id}`, {
                         method: 'DELETE',
-                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                        headers: { Authorization: `Bearer ${acc.token}` }
                     });
                 }
             },
@@ -241,14 +249,12 @@
             '1secmail': {
                 name: '1SecMail',
                 async generate() {
-                    const res = await fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1');
-                    const data = await res.json();
+                    const data = await proxyFetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1');
                     const [login, domain] = data[0].split('@');
                     return { address: data[0], login, domain };
                 },
                 async getMessages(acc) {
-                    const res = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${acc.login}&domain=${acc.domain}`);
-                    const data = await res.json();
+                    const data = await proxyFetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${acc.login}&domain=${acc.domain}`);
                     return data.map(m => ({
                         id: String(m.id),
                         from: m.from,
@@ -259,8 +265,7 @@
                     }));
                 },
                 async getMessage(acc, id) {
-                    const res = await fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${acc.login}&domain=${acc.domain}&id=${id}`);
-                    const m = await res.json();
+                    const m = await proxyFetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${acc.login}&domain=${acc.domain}&id=${id}`);
                     return {
                         id: String(m.id),
                         from: m.from,
@@ -272,11 +277,42 @@
                         text: m.body || '(No content)'
                     };
                 },
-                async deleteMessage() {
-                    // 1SecMail auto-deletes after some time; no explicit delete endpoint
-                }
-            }
+                async deleteMessage() {}
+            },
+
+            // Fallback template configurations for other proxy options in your dropdown list
+            guerrilla: createProxyProvider('Guerrilla Mail'),
+            maildrop: createProxyProvider('Maildrop'),
+            tempmailorg: createProxyProvider('Temp-Mail.org'),
+            mailslurp: createProxyProvider('MailSlurp'),
+            tempail: createProxyProvider('Tempail'),
+            dispostable: createProxyProvider('Dispostable'),
+            fakemail: createProxyProvider('FakeMail'),
+            throwaway: createProxyProvider('ThrowAwayMail'),
+            tempmailio: createProxyProvider('TempMail.io'),
+            mohmal: createProxyProvider('Mohmal'),
+            getnada: createProxyProvider('GetNada'),
+            burnermail: createProxyProvider('BurnerMail'),
+            emailondeck: createProxyProvider('EmailOnDeck'),
+            tempmailo: createProxyProvider('TempMailo'),
+            discard: createProxyProvider('DiscardEmail'),
+            crazymailing: createProxyProvider('Crazymailing'),
+            tempinbox: createProxyProvider('TempInbox'),
+            boxmail: createProxyProvider('BoxMail')
         };
+
+        function createProxyProvider(name) {
+            return {
+                name: name,
+                async generate() {
+                    // Adapt or implement the specific endpoints if you want active support for individual provider networks
+                    throw new Error(`${name} requires endpoint-specific mappings.`);
+                },
+                async getMessages() { return []; },
+                async getMessage() { return {}; },
+                async deleteMessage() {}
+            };
+        }
 
         // ==================== UI HELPERS ====================
         function toast(msg, type = 'success') {
@@ -301,11 +337,7 @@
 
         // ==================== CORE FUNCTIONS ====================
         async function switchProvider(val) {
-            if (!providers[val]) {
-                toast('This provider requires a backend proxy (CORS). Use Mail.tm or 1SecMail for now.', 'error');
-                document.getElementById('provider-select').value = currentProvider;
-                return;
-            }
+            if (!providers[val]) return;
             currentProvider = val;
             document.getElementById('badge-text').textContent = providers[val].name;
             setStatus('Switching provider...');
@@ -350,11 +382,6 @@
                 renderList();
                 setStatus(`Synced ${new Date().toLocaleTimeString()}`);
             } catch (e) {
-                if (e.message === 'unauthorized') {
-                    toast('Session expired — generating new address', 'error');
-                    generateNewAccount();
-                    return;
-                }
                 console.error(e);
             } finally {
                 setTimeout(() => icon.classList.remove('spin'), 400);
