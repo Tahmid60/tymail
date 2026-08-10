@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TempMail — Disposable Inbox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .fade-in { animation: fadeIn 0.3s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+        .spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .glass { background: rgba(23, 23, 23, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+        .hover-lift { transition: all 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-1px); }
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #525252; }
+        iframe { color-scheme: light; }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        surface: { 50: '#fafafa', 100: '#f5f5f5', 900: '#171717', 950: '#0a0a0a' }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-surface-950 text-neutral-300 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-50 glass border-b border-white/5">
+        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm">
+                    <i class="fa-solid fa-envelope"></i>
+                </div>
+                <span class="font-semibold text-white tracking-tight text-sm sm:text-base">TempMail</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <select id="provider-select" onchange="switchProvider(this.value)"
+                    class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer max-w-[140px] sm:max-w-[200px]">
+                    <option value="mailtm">Mail.tm</option>
+                    <option value="1secmail">1SecMail</option>
+                    <option value="guerrilla" disabled>Guerrilla Mail (proxy)</option>
+                    <option value="maildrop" disabled>Maildrop (proxy)</option>
+                    <option value="tempmailorg" disabled>Temp-Mail.org (proxy)</option>
+                    <option value="mailslurp" disabled>MailSlurp (proxy)</option>
+                    <option value="tempail" disabled>Tempail (proxy)</option>
+                    <option value="dispostable" disabled>Dispostable (proxy)</option>
+                    <option value="fakemail" disabled>FakeMail (proxy)</option>
+                    <option value="throwaway" disabled>ThrowAwayMail (proxy)</option>
+                    <option value="tempmailio" disabled>TempMail.io (proxy)</option>
+                    <option value="mohmal" disabled>Mohmal (proxy)</option>
+                    <option value="getnada" disabled>GetNada (proxy)</option>
+                    <option value="burnermail" disabled>BurnerMail (proxy)</option>
+                    <option value="emailondeck" disabled>EmailOnDeck (proxy)</option>
+                    <option value="tempmailo" disabled>TempMailo (proxy)</option>
+                    <option value="discard" disabled>DiscardEmail (proxy)</option>
+                    <option value="crazymailing" disabled>Crazymailing (proxy)</option>
+                    <option value="tempinbox" disabled>TempInbox (proxy)</option>
+                    <option value="boxmail" disabled>BoxMail (proxy)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main -->
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 sm:py-10 flex flex-col gap-6">
+
+        <!-- Address Card -->
+        <div class="glass rounded-2xl p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-white font-semibold text-lg">Your temporary address</h1>
+                    <p class="text-neutral-500 text-xs mt-0.5" id="status-text">Select a provider to begin</p>
+                </div>
+                <div id="provider-badge" class="hidden sm:flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-neutral-500 border border-white/5 rounded-full px-2.5 py-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    <span id="badge-text">Mail.tm</span>
+                </div>
+            </div>
+
+            <div class="flex flex-col sm:flex-row gap-2">
+                <div class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 min-w-0">
+                    <i class="fa-regular fa-envelope text-neutral-500 text-sm"></i>
+                    <span id="email-display" class="mono text-emerald-400 text-sm sm:text-base truncate">—</span>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="copyEmail()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white text-black rounded-xl text-sm font-medium hover:bg-neutral-200 transition flex items-center justify-center gap-2">
+                        <i class="fa-regular fa-copy text-xs"></i>
+                        <span class="hidden sm:inline">Copy</span>
+                    </button>
+                    <button onclick="generateNewAccount()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-arrows-rotate text-xs" id="gen-icon"></i>
+                        <span class="hidden sm:inline">New</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-neutral-600">
+                <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse"></span>
+                    <span id="poll-status">Auto-refresh every 8s</span>
+                </div>
+                <span id="msg-count">0 messages</span>
+            </div>
+        </div>
+
+        <!-- Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 flex-grow">
+            <!-- Inbox -->
+            <div class="lg:col-span-2 glass rounded-2xl flex flex-col h-[420px] lg:h-[520px] overflow-hidden">
+                <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-sm font-medium text-white">Inbox</span>
+                    <button onclick="refreshInbox()" class="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center transition text-neutral-400">
+                        <i class="fa-solid fa-rotate text-[10px]" id="refresh-icon"></i>
+                    </button>
+                </div>
+                <div id="message-list" class="flex-1 overflow-y-auto p-2 space-y-1">
+                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2">
+                        <i class="fa-solid fa-inbox text-2xl"></i>
+                        <span class="text-xs">No messages yet</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reader -->
+            <div class="lg:col-span-3 glass rounded-2xl flex flex-col h-[420px] lg:h-[520px] overflow-hidden">
+                <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
+                    <span class="text-sm font-medium text-white">Message</span>
+                    <button onclick="deleteCurrentMessage()" id="delete-btn" class="hidden text-xs text-red-400 hover:text-red-300 transition">
+                        <i class="fa-regular fa-trash-can mr-1"></i>Delete
+                    </button>
+                </div>
+                <div id="message-view" class="flex-1 overflow-y-auto p-4 sm:p-6">
+                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 text-center">
+                        <i class="fa-regular fa-envelope-open text-3xl mb-1"></i>
+                        <span class="text-xs">Select a message to read</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/5 py-4 text-center text-[11px] text-neutral-700">
+        <p>Client-side only. No data stored. Powered by public APIs.</p>
+    </footer>
+
+    <!-- Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 translate-y-20 opacity-0 transition-all duration-300 bg-surface-900 border border-white/10 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-msg">Done</span>
+    </div>
+
+    <script>
+        // ==================== STATE ====================
+        let currentProvider = 'mailtm';
+        let account = null;
+        let messages = [];
+        let selectedId = null;
+        let pollTimer = null;
+
+        // ==================== PROVIDERS ====================
+        const providers = {
+            mailtm: {
+                name: 'Mail.tm',
+                async generate() {
+                    const domRes = await fetch('https://api.mail.tm/domains');
+                    const domData = await domRes.json();
+                    const domain = domData['hydra:member'][0].domain;
+                    const user = Math.random().toString(36).slice(2, 10);
+                    const address = `${user}@${domain}`;
+                    const password = 'x'.repeat(12);
+
+                    const regRes = await fetch('https://api.mail.tm/accounts', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address, password })
+                    });
+                    if (!regRes.ok) throw new Error('Registration failed');
+
+                    const tokRes = await fetch('https://api.mail.tm/token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ address, password })
+                    });
+                    const tokData = await tokRes.json();
+                    return { address, token: tokData.token, password };
+                },
+                async getMessages(acc) {
+                    const res = await fetch('https://api.mail.tm/messages', {
+                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                    });
+                    if (res.status === 401) throw new Error('unauthorized');
+                    const data = await res.json();
+                    return (data['hydra:member'] || []).map(m => ({
+                        id: m.id,
+                        from: m.from.name || m.from.address,
+                        fromAddr: m.from.address,
+                        subject: m.subject || '(No subject)',
+                        preview: m.intro || '',
+                        date: new Date(m.createdAt)
+                    }));
+                },
+                async getMessage(acc, id) {
+                    const res = await fetch(`https://api.mail.tm/messages/${id}`, {
+                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                    });
+                    const m = await res.json();
+                    return {
+                        id: m.id,
+                        from: m.from.name || m.from.address,
+                        fromAddr: m.from.address,
+                        to: m.to?.[0]?.address || acc.address,
+                        subject: m.subject || '(No subject)',
+                        date: new Date(m.createdAt),
+                        html: m.html || '',
+                        text: m.text || m.intro || '(No content)'
+                    };
+                },
+                async deleteMessage(acc, id) {
+                    await fetch(`https://api.mail.tm/messages/${id}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${acc.token}` }
+                    });
+                }
+            },
+
+            '1secmail': {
+                name: '1SecMail',
+                async generate() {
+                    const res = await fetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1');
+                    const data = await res.json();
+                    const [login, domain] = data[0].split('@');
+                    return { address: data[0], login, domain };
+                },
+                async getMessages(acc) {
+                    const res = await fetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${acc.login}&domain=${acc.domain}`);
+                    const data = await res.json();
+                    return data.map(m => ({
+                        id: String(m.id),
+                        from: m.from,
+                        fromAddr: m.from,
+                        subject: m.subject || '(No subject)',
+                        preview: '',
+                        date: new Date(m.date)
+                    }));
+                },
+                async getMessage(acc, id) {
+                    const res = await fetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${acc.login}&domain=${acc.domain}&id=${id}`);
+                    const m = await res.json();
+                    return {
+                        id: String(m.id),
+                        from: m.from,
+                        fromAddr: m.from,
+                        to: m.to,
+                        subject: m.subject || '(No subject)',
+                        date: new Date(m.date),
+                        html: m.htmlBody || '',
+                        text: m.body || '(No content)'
+                    };
+                },
+                async deleteMessage() {
+                    // 1SecMail auto-deletes after some time; no explicit delete endpoint
+                }
+            }
+        };
+
+        // ==================== UI HELPERS ====================
+        function toast(msg, type = 'success') {
+            const el = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').textContent = msg;
+            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-exclamation text-amber-400';
+            el.classList.remove('translate-y-20', 'opacity-0');
+            setTimeout(() => el.classList.add('translate-y-20', 'opacity-0'), 2500);
+        }
+
+        function setStatus(text) {
+            document.getElementById('status-text').textContent = text;
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        // ==================== CORE FUNCTIONS ====================
+        async function switchProvider(val) {
+            if (!providers[val]) {
+                toast('This provider requires a backend proxy (CORS). Use Mail.tm or 1SecMail for now.', 'error');
+                document.getElementById('provider-select').value = currentProvider;
+                return;
+            }
+            currentProvider = val;
+            document.getElementById('badge-text').textContent = providers[val].name;
+            setStatus('Switching provider...');
+            await generateNewAccount();
+        }
+
+        async function generateNewAccount() {
+            const icon = document.getElementById('gen-icon');
+            icon.classList.add('spin');
+            setStatus('Creating mailbox...');
+            try {
+                account = await providers[currentProvider].generate();
+                messages = [];
+                selectedId = null;
+                document.getElementById('email-display').textContent = account.address;
+                renderList();
+                resetView();
+                toast('New address ready');
+                if (pollTimer) clearInterval(pollTimer);
+                pollTimer = setInterval(refreshInbox, 8000);
+            } catch (e) {
+                console.error(e);
+                toast(e.message || 'Failed to create address', 'error');
+                setStatus('Error — try again');
+            } finally {
+                icon.classList.remove('spin');
+            }
+        }
+
+        function copyEmail() {
+            if (!account?.address) return;
+            navigator.clipboard.writeText(account.address);
+            toast('Copied to clipboard');
+        }
+
+        async function refreshInbox() {
+            if (!account) return;
+            const icon = document.getElementById('refresh-icon');
+            icon.classList.add('spin');
+            try {
+                messages = await providers[currentProvider].getMessages(account);
+                renderList();
+                setStatus(`Synced ${new Date().toLocaleTimeString()}`);
+            } catch (e) {
+                if (e.message === 'unauthorized') {
+                    toast('Session expired — generating new address', 'error');
+                    generateNewAccount();
+                    return;
+                }
+                console.error(e);
+            } finally {
+                setTimeout(() => icon.classList.remove('spin'), 400);
+            }
+        }
+
+        function renderList() {
+            const container = document.getElementById('message-list');
+            document.getElementById('msg-count').textContent = `${messages.length} message${messages.length !== 1 ? 's' : ''}`;
+
+            if (messages.length === 0) {
+                container.innerHTML = `
+                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 fade-in">
+                        <i class="fa-solid fa-inbox text-2xl"></i>
+                        <span class="text-xs">No messages yet</span>
+                    </div>`;
+                return;
+            }
+
+            container.innerHTML = messages.map(m => {
+                const time = m.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                const active = m.id === selectedId ? 'bg-white/5 border-l-2 border-white' : 'hover:bg-white/3 border-l-2 border-transparent';
+                return `
+                    <div onclick="selectMessage('${m.id}')" class="${active} rounded-lg px-3 py-2.5 cursor-pointer transition group fade-in">
+                        <div class="flex items-center justify-between mb-0.5">
+                            <span class="text-xs font-medium text-white truncate max-w-[140px]">${escapeHtml(m.from)}</span>
+                            <span class="text-[10px] text-neutral-600">${time}</span>
+                        </div>
+                        <div class="text-xs text-neutral-300 truncate">${escapeHtml(m.subject)}</div>
+                        <div class="text-[11px] text-neutral-600 truncate">${escapeHtml(m.preview)}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function selectMessage(id) {
+            selectedId = id;
+            renderList();
+            const view = document.getElementById('message-view');
+            const delBtn = document.getElementById('delete-btn');
+            delBtn.classList.remove('hidden');
+
+            view.innerHTML = `<div class="h-full flex items-center justify-center"><i class="fa-solid fa-circle-notch spin text-neutral-500"></i></div>`;
+
+            try {
+                const m = await providers[currentProvider].getMessage(account, id);
+                const dateStr = m.date.toLocaleString();
+                const body = m.html
+                    ? `<iframe class="w-full h-80 sm:h-96 bg-white rounded-lg border border-white/10" sandbox="allow-same-origin" srcdoc="${escapeHtml(m.html)}"></iframe>`
+                    : `<pre class="whitespace-pre-wrap text-sm text-neutral-300 font-sans">${escapeHtml(m.text)}</pre>`;
+
+                view.innerHTML = `
+                    <div class="space-y-4 fade-in">
+                        <div class="border-b border-white/5 pb-3">
+                            <h2 class="text-white font-semibold text-base mb-1">${escapeHtml(m.subject)}</h2>
+                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-500">
+                                <span><span class="text-neutral-400">From:</span> ${escapeHtml(m.fromAddr)}</span>
+                                <span><span class="text-neutral-400">To:</span> ${escapeHtml(m.to)}</span>
+                                <span><span class="text-neutral-400">Date:</span> ${dateStr}</span>
+                            </div>
+                        </div>
+                        <div>${body}</div>
+                    </div>
+                `;
+            } catch (e) {
+                view.innerHTML = `<div class="text-red-400 text-sm">Failed to load message</div>`;
+            }
+        }
+
+        async function deleteCurrentMessage() {
+            if (!selectedId) return;
+            try {
+                await providers[currentProvider].deleteMessage(account, selectedId);
+                messages = messages.filter(m => m.id !== selectedId);
+                selectedId = null;
+                renderList();
+                resetView();
+                toast('Deleted');
+            } catch (e) {
+                toast('Delete failed', 'error');
+            }
+        }
+
+        function resetView() {
+            document.getElementById('message-view').innerHTML = `
+                <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 text-center fade-in">
+                    <i class="fa-regular fa-envelope-open text-3xl mb-1"></i>
+                    <span class="text-xs">Select a message to read</span>
+                </div>`;
+            document.getElementById('delete-btn').classList.add('hidden');
+        }
+
+        // ==================== INIT ====================
+        window.addEventListener('DOMContentLoaded', () => {
+            generateNewAccount();
+        });
+    </script>
+</body>
+</html>
