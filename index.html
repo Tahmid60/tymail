@@ -10,14 +10,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
         body { font-family: 'Inter', sans-serif; }
         .mono { font-family: 'JetBrains Mono', monospace; }
-        .fade-in { animation: fadeIn 0.3s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
-        .spin { animation: spin 1s linear infinite; }
+        .fade-in { animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
+        .spin { animation: spin 0.8s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .glass { background: rgba(23, 23, 23, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        .glass { background: rgba(23, 23, 23, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
         iframe { color-scheme: light; }
     </style>
     <script>
@@ -31,6 +31,7 @@
             }
         }
     </script>
+<base target="_blank">
 </head>
 <body class="bg-surface-950 text-neutral-300 min-h-screen flex flex-col">
 
@@ -48,22 +49,41 @@
                     class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer">
                     <option value="mailtm">Mail.tm</option>
                     <option value="1secmail">1SecMail</option>
+                    <option value="maildrop">Maildrop</option>
+                    <option disabled>──────────</option>
+                    <option value="guerrilla" disabled>Guerrilla Mail (soon)</option>
+                    <option value="tempmailorg" disabled>Temp-Mail.org (key req)</option>
+                    <option value="mailslurp" disabled>MailSlurp (key req)</option>
+                    <option value="tempail" disabled>Tempail (no API)</option>
+                    <option value="dispostable" disabled>Dispostable (no API)</option>
+                    <option value="fakemail" disabled>FakeMail (no API)</option>
+                    <option value="throwaway" disabled>ThrowAwayMail (soon)</option>
+                    <option value="tempmailio" disabled>TempMail.io (soon)</option>
+                    <option value="mohmal" disabled>Mohmal (soon)</option>
+                    <option value="getnada" disabled>GetNada (soon)</option>
+                    <option value="burnermail" disabled>BurnerMail (paid)</option>
+                    <option value="emailondeck" disabled>EmailOnDeck (soon)</option>
+                    <option value="tempmailo" disabled>TempMailo (no API)</option>
+                    <option value="discard" disabled>DiscardEmail (no API)</option>
+                    <option value="crazymailing" disabled>Crazymailing (no API)</option>
+                    <option value="tempinbox" disabled>TempInbox (no API)</option>
+                    <option value="boxmail" disabled>BoxMail (no API)</option>
                 </select>
             </div>
         </div>
     </header>
 
     <!-- Main -->
-    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 sm:py-10 flex flex-col gap-6">
+    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 sm:py-10 flex flex-col gap-5">
 
         <!-- Address Card -->
         <div class="glass rounded-2xl p-5 sm:p-6 space-y-4">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-white font-semibold text-lg">Your temporary address</h1>
+                    <h1 class="text-white font-semibold text-base sm:text-lg">Your temporary address</h1>
                     <p class="text-neutral-500 text-xs mt-0.5" id="status-text">Select a provider to begin</p>
                 </div>
-                <div id="provider-badge" class="hidden sm:flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-neutral-500 border border-white/5 rounded-full px-2.5 py-1">
+                <div class="hidden sm:flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-neutral-500 border border-white/5 rounded-full px-2.5 py-1">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                     <span id="badge-text">Mail.tm</span>
                 </div>
@@ -88,7 +108,7 @@
 
             <div class="flex items-center justify-between text-[11px] text-neutral-600">
                 <div class="flex items-center gap-2">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse"></span>
+                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse"></span>
                     <span id="poll-status">Auto-refresh every 8s</span>
                 </div>
                 <span id="msg-count">0 messages</span>
@@ -98,7 +118,7 @@
         <!-- Content Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 flex-grow">
             <!-- Inbox -->
-            <div class="lg:col-span-2 glass rounded-2xl flex flex-col h-[420px] lg:h-[520px] overflow-hidden">
+            <div class="lg:col-span-2 glass rounded-2xl flex flex-col h-[400px] sm:h-[480px] overflow-hidden">
                 <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                     <span class="text-sm font-medium text-white">Inbox</span>
                     <button onclick="refreshInbox()" class="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center transition text-neutral-400">
@@ -114,7 +134,7 @@
             </div>
 
             <!-- Reader -->
-            <div class="lg:col-span-3 glass rounded-2xl flex flex-col h-[420px] lg:h-[520px] overflow-hidden">
+            <div class="lg:col-span-3 glass rounded-2xl flex flex-col h-[400px] sm:h-[480px] overflow-hidden">
                 <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
                     <span class="text-sm font-medium text-white">Message</span>
                     <button onclick="deleteCurrentMessage()" id="delete-btn" class="hidden text-xs text-red-400 hover:text-red-300 transition">
@@ -133,7 +153,7 @@
 
     <!-- Footer -->
     <footer class="border-t border-white/5 py-4 text-center text-[11px] text-neutral-700">
-        <p>Client-side proxied via Vercel serverless functions. No data stored.</p>
+        <p>Proxied via Vercel. No data stored on our servers.</p>
     </footer>
 
     <!-- Toast -->
@@ -148,41 +168,51 @@
         let messages = [];
         let selectedId = null;
         let pollTimer = null;
+        let abortCtrl = null;
 
+        // ─── Proxy Helper ───
         async function proxyFetch(url, options = {}) {
+            if (abortCtrl) abortCtrl.abort();
+            abortCtrl = new AbortController();
+
             const proxyUrl = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl, {
+                signal: abortCtrl.signal,
                 method: options.method || 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     ...(options.headers?.Authorization ? { 'Authorization': options.headers.Authorization } : {})
                 },
-                ...(options.body ? { body: options.body } : {})
+                ...(options.body ? { body: typeof options.body === 'string' ? options.body : JSON.stringify(options.body) } : {})
             });
-            return res.json();
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data.error || data._raw || `HTTP ${res.status}`);
+            return data;
         }
 
+        // ─── Providers ───
         const providers = {
             mailtm: {
                 name: 'Mail.tm',
                 async generate() {
                     const domData = await proxyFetch('https://api.mail.tm/domains');
-                    const domain = domData['hydra:member'][0].domain;
+                    const domain = domData['hydra:member']?.[0]?.domain;
+                    if (!domain) throw new Error('No domains available');
                     const user = Math.random().toString(36).slice(2, 10);
                     const address = `${user}@${domain}`;
-                    const password = 'x'.repeat(12);
+                    const password = Math.random().toString(36).slice(2, 15);
 
-                    const regRes = await fetch(`/api/proxy?targetUrl=${encodeURIComponent('https://api.mail.tm/accounts')}`, {
+                    await proxyFetch('https://api.mail.tm/accounts', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ address, password })
+                        body: { address, password }
                     });
-                    if (!regRes.ok) throw new Error('Registration failed');
 
                     const tokData = await proxyFetch('https://api.mail.tm/token', {
                         method: 'POST',
-                        body: JSON.stringify({ address, password })
+                        body: { address, password }
                     });
+
                     return { address, token: tokData.token, password };
                 },
                 async getMessages(acc) {
@@ -191,8 +221,8 @@
                     });
                     return (data['hydra:member'] || []).map(m => ({
                         id: m.id,
-                        from: m.from.name || m.from.address,
-                        fromAddr: m.from.address,
+                        from: m.from?.name || m.from?.address || 'Unknown',
+                        fromAddr: m.from?.address || '',
                         subject: m.subject || '(No subject)',
                         preview: m.intro || '',
                         date: new Date(m.createdAt)
@@ -204,8 +234,8 @@
                     });
                     return {
                         id: m.id,
-                        from: m.from.name || m.from.address,
-                        fromAddr: m.from.address,
+                        from: m.from?.name || m.from?.address || 'Unknown',
+                        fromAddr: m.from?.address || '',
                         to: m.to?.[0]?.address || acc.address,
                         subject: m.subject || '(No subject)',
                         date: new Date(m.createdAt),
@@ -225,15 +255,17 @@
                 name: '1SecMail',
                 async generate() {
                     const data = await proxyFetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1');
+                    if (!Array.isArray(data) || !data[0]) throw new Error('Failed to generate mailbox');
                     const [login, domain] = data[0].split('@');
                     return { address: data[0], login, domain };
                 },
                 async getMessages(acc) {
                     const data = await proxyFetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${acc.login}&domain=${acc.domain}`);
+                    if (!Array.isArray(data)) return [];
                     return data.map(m => ({
                         id: String(m.id),
-                        from: m.from,
-                        fromAddr: m.from,
+                        from: m.from || 'Unknown',
+                        fromAddr: m.from || '',
                         subject: m.subject || '(No subject)',
                         preview: '',
                         date: new Date(m.date)
@@ -243,12 +275,48 @@
                     const m = await proxyFetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${acc.login}&domain=${acc.domain}&id=${id}`);
                     return {
                         id: String(m.id),
-                        from: m.from,
-                        fromAddr: m.from,
-                        to: m.to,
+                        from: m.from || 'Unknown',
+                        fromAddr: m.from || '',
+                        to: m.to || acc.address,
                         subject: m.subject || '(No subject)',
                         date: new Date(m.date),
                         html: m.htmlBody || '',
+                        text: m.body || '(No content)'
+                    };
+                },
+                async deleteMessage() {
+                    // 1SecMail auto-deletes; no endpoint
+                }
+            },
+
+            maildrop: {
+                name: 'Maildrop',
+                async generate() {
+                    const prefix = 'tmp' + Math.random().toString(36).slice(2, 10);
+                    return { address: `${prefix}@maildrop.cc`, prefix };
+                },
+                async getMessages(acc) {
+                    const data = await proxyFetch(`https://api.maildrop.cc/v2/mailbox/${acc.prefix}`);
+                    if (!data || !Array.isArray(data.messages)) return [];
+                    return data.messages.map(m => ({
+                        id: m.id,
+                        from: m.from || 'Unknown',
+                        fromAddr: m.from || '',
+                        subject: m.subject || '(No subject)',
+                        preview: '',
+                        date: new Date(m.date)
+                    }));
+                },
+                async getMessage(acc, id) {
+                    const m = await proxyFetch(`https://api.maildrop.cc/v2/mailbox/${acc.prefix}/${id}`);
+                    return {
+                        id: m.id,
+                        from: m.from || 'Unknown',
+                        fromAddr: m.from || '',
+                        to: acc.address,
+                        subject: m.subject || '(No subject)',
+                        date: new Date(m.date),
+                        html: m.body || '',
                         text: m.body || '(No content)'
                     };
                 },
@@ -256,11 +324,14 @@
             }
         };
 
+        // ─── UI Helpers ───
         function toast(msg, type = 'success') {
             const el = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
             document.getElementById('toast-msg').textContent = msg;
-            icon.className = type === 'success' ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-exclamation text-amber-400';
+            icon.className = type === 'success'
+                ? 'fa-solid fa-circle-check text-emerald-400'
+                : 'fa-solid fa-circle-exclamation text-amber-400';
             el.classList.remove('translate-y-20', 'opacity-0');
             setTimeout(() => el.classList.add('translate-y-20', 'opacity-0'), 2500);
         }
@@ -276,11 +347,13 @@
             return div.innerHTML;
         }
 
+        // ─── Core ───
         async function switchProvider(val) {
             if (!providers[val]) return;
             currentProvider = val;
             document.getElementById('badge-text').textContent = providers[val].name;
-            setStatus('Switching provider...');
+            document.getElementById('provider-select').value = val;
+            if (pollTimer) clearInterval(pollTimer);
             await generateNewAccount();
         }
 
@@ -288,6 +361,8 @@
             const icon = document.getElementById('gen-icon');
             icon.classList.add('spin');
             setStatus('Creating mailbox...');
+            document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
+
             try {
                 account = await providers[currentProvider].generate();
                 messages = [];
@@ -296,12 +371,16 @@
                 renderList();
                 resetView();
                 toast('New address ready');
+                setStatus('Active — waiting for mail');
+                document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+
                 if (pollTimer) clearInterval(pollTimer);
                 pollTimer = setInterval(refreshInbox, 8000);
             } catch (e) {
                 console.error(e);
                 toast(e.message || 'Failed to create address', 'error');
                 setStatus('Error — try again');
+                document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-red-500';
             } finally {
                 icon.classList.remove('spin');
             }
@@ -320,9 +399,10 @@
             try {
                 messages = await providers[currentProvider].getMessages(account);
                 renderList();
-                setStatus(`Synced ${new Date().toLocaleTimeString()}`);
+                setStatus(`Synced at ${new Date().toLocaleTimeString()}`);
             } catch (e) {
                 console.error(e);
+                setStatus('Sync failed');
             } finally {
                 setTimeout(() => icon.classList.remove('spin'), 400);
             }
@@ -343,15 +423,15 @@
 
             container.innerHTML = messages.map(m => {
                 const time = m.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const active = m.id === selectedId ? 'bg-white/5 border-l-2 border-white' : 'hover:bg-white/3 border-l-2 border-transparent';
+                const active = m.id === selectedId ? 'bg-white/5 border-l-2 border-white' : 'hover:bg-white/[0.02] border-l-2 border-transparent';
                 return `
-                    <div onclick="selectMessage('${m.id}')" class="${active} rounded-lg px-3 py-2.5 cursor-pointer transition group fade-in">
+                    <div onclick="selectMessage('${m.id}')" class="${active} rounded-lg px-3 py-2.5 cursor-pointer transition fade-in">
                         <div class="flex items-center justify-between mb-0.5">
                             <span class="text-xs font-medium text-white truncate max-w-[140px]">${escapeHtml(m.from)}</span>
                             <span class="text-[10px] text-neutral-600">${time}</span>
                         </div>
                         <div class="text-xs text-neutral-300 truncate">${escapeHtml(m.subject)}</div>
-                        <div class="text-[11px] text-neutral-600 truncate">${escapeHtml(m.preview)}</div>
+                        ${m.preview ? `<div class="text-[11px] text-neutral-600 truncate">${escapeHtml(m.preview)}</div>` : ''}
                     </div>
                 `;
             }).join('');
@@ -361,16 +441,15 @@
             selectedId = id;
             renderList();
             const view = document.getElementById('message-view');
-            const delBtn = document.getElementById('delete-btn');
-            delBtn.classList.remove('hidden');
+            document.getElementById('delete-btn').classList.remove('hidden');
 
-            view.innerHTML = `<div class="h-full flex items-center justify-center"><i class="fa-solid fa-circle-notch spin text-neutral-500"></i></div>`;
+            view.innerHTML = `<div class="h-full flex items-center justify-center fade-in"><i class="fa-solid fa-circle-notch spin text-neutral-500"></i></div>`;
 
             try {
                 const m = await providers[currentProvider].getMessage(account, id);
                 const dateStr = m.date.toLocaleString();
                 const body = m.html
-                    ? `<iframe class="w-full h-80 sm:h-96 bg-white rounded-lg border border-white/10" sandbox="allow-same-origin" srcdoc="${escapeHtml(m.html)}"></iframe>`
+                    ? `<iframe class="w-full h-72 sm:h-96 bg-white rounded-lg border border-white/10" sandbox="allow-same-origin" srcdoc="${escapeHtml(m.html)}"></iframe>`
                     : `<pre class="whitespace-pre-wrap text-sm text-neutral-300 font-sans">${escapeHtml(m.text)}</pre>`;
 
                 view.innerHTML = `
@@ -387,7 +466,7 @@
                     </div>
                 `;
             } catch (e) {
-                view.innerHTML = `<div class="text-red-400 text-sm">Failed to load message</div>`;
+                view.innerHTML = `<div class="text-red-400 text-sm fade-in">Failed to load message</div>`;
             }
         }
 
@@ -414,6 +493,7 @@
             document.getElementById('delete-btn').classList.add('hidden');
         }
 
+        // ─── Init ───
         window.addEventListener('DOMContentLoaded', () => {
             generateNewAccount();
         });
