@@ -15,13 +15,9 @@
         .spin { animation: spin 1s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .glass { background: rgba(23, 23, 23, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
-        .hover-lift { transition: all 0.2s ease; }
-        .hover-lift:hover { transform: translateY(-1px); }
-        /* Scrollbar */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #525252; }
         iframe { color-scheme: light; }
     </style>
     <script>
@@ -49,27 +45,9 @@
             </div>
             <div class="flex items-center gap-3">
                 <select id="provider-select" onchange="switchProvider(this.value)"
-                    class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer max-w-[140px] sm:max-w-[200px]">
+                    class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer">
                     <option value="mailtm">Mail.tm</option>
                     <option value="1secmail">1SecMail</option>
-                    <option value="guerrilla">Guerrilla Mail (proxy)</option>
-                    <option value="maildrop">Maildrop (proxy)</option>
-                    <option value="tempmailorg">Temp-Mail.org (proxy)</option>
-                    <option value="mailslurp">MailSlurp (proxy)</option>
-                    <option value="tempail">Tempail (proxy)</option>
-                    <option value="dispostable">Dispostable (proxy)</option>
-                    <option value="fakemail">FakeMail (proxy)</option>
-                    <option value="throwaway">ThrowAwayMail (proxy)</option>
-                    <option value="tempmailio">TempMail.io (proxy)</option>
-                    <option value="mohmal">Mohmal (proxy)</option>
-                    <option value="getnada">GetNada (proxy)</option>
-                    <option value="burnermail">BurnerMail (proxy)</option>
-                    <option value="emailondeck">EmailOnDeck (proxy)</option>
-                    <option value="tempmailo">TempMailo (proxy)</option>
-                    <option value="discard">DiscardEmail (proxy)</option>
-                    <option value="crazymailing">Crazymailing (proxy)</option>
-                    <option value="tempinbox">TempInbox (proxy)</option>
-                    <option value="boxmail">BoxMail (proxy)</option>
                 </select>
             </div>
         </div>
@@ -165,14 +143,12 @@
     </div>
 
     <script>
-        // ==================== STATE ====================
         let currentProvider = 'mailtm';
         let account = null;
         let messages = [];
         let selectedId = null;
         let pollTimer = null;
 
-        // Proxy helper function
         async function proxyFetch(url, options = {}) {
             const proxyUrl = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
             const res = await fetch(proxyUrl, {
@@ -186,7 +162,6 @@
             return res.json();
         }
 
-        // ==================== PROVIDERS ====================
         const providers = {
             mailtm: {
                 name: 'Mail.tm',
@@ -278,43 +253,9 @@
                     };
                 },
                 async deleteMessage() {}
-            },
-
-            // Fallback template configurations for other proxy options in your dropdown list
-            guerrilla: createProxyProvider('Guerrilla Mail'),
-            maildrop: createProxyProvider('Maildrop'),
-            tempmailorg: createProxyProvider('Temp-Mail.org'),
-            mailslurp: createProxyProvider('MailSlurp'),
-            tempail: createProxyProvider('Tempail'),
-            dispostable: createProxyProvider('Dispostable'),
-            fakemail: createProxyProvider('FakeMail'),
-            throwaway: createProxyProvider('ThrowAwayMail'),
-            tempmailio: createProxyProvider('TempMail.io'),
-            mohmal: createProxyProvider('Mohmal'),
-            getnada: createProxyProvider('GetNada'),
-            burnermail: createProxyProvider('BurnerMail'),
-            emailondeck: createProxyProvider('EmailOnDeck'),
-            tempmailo: createProxyProvider('TempMailo'),
-            discard: createProxyProvider('DiscardEmail'),
-            crazymailing: createProxyProvider('Crazymailing'),
-            tempinbox: createProxyProvider('TempInbox'),
-            boxmail: createProxyProvider('BoxMail')
+            }
         };
 
-        function createProxyProvider(name) {
-            return {
-                name: name,
-                async generate() {
-                    // Adapt or implement the specific endpoints if you want active support for individual provider networks
-                    throw new Error(`${name} requires endpoint-specific mappings.`);
-                },
-                async getMessages() { return []; },
-                async getMessage() { return {}; },
-                async deleteMessage() {}
-            };
-        }
-
-        // ==================== UI HELPERS ====================
         function toast(msg, type = 'success') {
             const el = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
@@ -335,7 +276,6 @@
             return div.innerHTML;
         }
 
-        // ==================== CORE FUNCTIONS ====================
         async function switchProvider(val) {
             if (!providers[val]) return;
             currentProvider = val;
@@ -474,7 +414,6 @@
             document.getElementById('delete-btn').classList.add('hidden');
         }
 
-        // ==================== INIT ====================
         window.addEventListener('DOMContentLoaded', () => {
             generateNewAccount();
         });
