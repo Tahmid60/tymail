@@ -1,502 +1,1255 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TempMail — Disposable Inbox</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-        body { font-family: 'Inter', sans-serif; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
-        .fade-in { animation: fadeIn 0.25s ease-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: translateY(0); } }
-        .spin { animation: spin 0.8s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-        .glass { background: rgba(23, 23, 23, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.06); }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
-        iframe { color-scheme: light; }
-    </style>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        surface: { 50: '#fafafa', 100: '#f5f5f5', 900: '#171717', 950: '#0a0a0a' }
-                    }
-                }
-            }
-        }
-    </script>
-<base target="_blank">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>AuroraMail — Liquid Glass Temporary Email</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%2360a5fa'/%3E%3Cstop offset='1' stop-color='%23a78bfa'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='24' fill='url(%23g)'/%3E%3Ctext x='50' y='68' font-size='52' text-anchor='middle' fill='white' font-family='sans-serif' font-weight='bold'%3E%F0%9F%92%A7%3C/text%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/regular/style.css">
+<link rel="stylesheet" href="https://unpkg.com/@phosphor-icons/web@2.1.1/src/bold/style.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg0:#0a0a1a; --bg1:#0f172a;
+  --glass:linear-gradient(150deg,rgba(255,255,255,.14),rgba(255,255,255,.05) 40%,rgba(255,255,255,.02));
+  --glass-border:rgba(255,255,255,.16);
+  --glass-border-strong:rgba(255,255,255,.26);
+  --text:#f8fafc; --text2:#94a3b8; --text3:#64748b;
+  --accent:#60a5fa; --accent2:#a78bfa; --ok:#4ade80; --danger:#f87171;
+  --shadow:0 8px 32px rgba(2,6,23,.45);
+  --ease:cubic-bezier(.4,0,.2,1);
+  --radius:24px;
+  --header-h:64px;
+  --font:'Inter',-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;
+  --mono:'JetBrains Mono','SF Mono',ui-monospace,Menlo,monospace;
+}
+[data-theme="light"]{
+  --bg0:#f0f4f8; --bg1:#e2e8f0;
+  --glass:linear-gradient(150deg,rgba(255,255,255,.55),rgba(255,255,255,.35) 40%,rgba(255,255,255,.28));
+  --glass-border:rgba(255,255,255,.65);
+  --glass-border-strong:rgba(255,255,255,.85);
+  --text:#1e293b; --text2:#475569; --text3:#64748b;
+  --shadow:0 8px 32px rgba(15,23,42,.12);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  font-family:var(--font); color:var(--text); background:var(--bg0);
+  overflow-x:hidden; overscroll-behavior-y:contain;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+::selection{background:rgba(96,165,250,.35)}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;color:inherit}
+.hidden{display:none!important}
+.mono{font-family:var(--mono)}
+i{font-style:normal;line-height:1}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* ============ BACKGROUND ============ */
+.bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(120% 120% at 50% 0%,var(--bg0),var(--bg1))}
+.blob{position:absolute;border-radius:50%;filter:blur(90px);opacity:.5;mix-blend-mode:screen;will-change:transform;animation:drift 26s ease-in-out infinite alternate}
+[data-theme="light"] .blob{opacity:.45;mix-blend-mode:multiply}
+.b1{width:58vw;height:58vw;background:radial-gradient(circle at 30% 30%,#312e81,transparent 62%);top:-18%;left:-12%}
+.b2{width:52vw;height:52vw;background:radial-gradient(circle at 60% 40%,#0ea5e9,transparent 62%);bottom:-20%;right:-10%;animation-delay:-9s}
+.b3{width:46vw;height:46vw;background:radial-gradient(circle at 50% 50%,#7c3aed,transparent 60%);top:30%;left:38%;animation-delay:-17s}
+@keyframes drift{from{transform:translate3d(0,0,0) scale(1)}to{transform:translate3d(4vw,-3vw,0) scale(1.15)}}
+.grain{position:fixed;inset:-10%;z-index:200;pointer-events:none;opacity:.035;filter:url(#noise)}
+
+/* ============ GLASS PRIMITIVES ============ */
+.glass{
+  position:relative;
+  background:var(--glass);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid var(--glass-border);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.22),inset 0 0 28px rgba(255,255,255,.045),var(--shadow);
+}
+.glass-edge{position:absolute;inset:-1px;border-radius:inherit;pointer-events:none;opacity:.55;filter:url(#edgeRefract);
+  background:linear-gradient(120deg,rgba(255,255,255,.4),transparent 26%,transparent 74%,rgba(255,255,255,.22));mix-blend-mode:screen}
+[data-theme="light"] .glass-edge{opacity:.5;mix-blend-mode:normal}
+.glass-sheen{position:absolute;inset:0;border-radius:inherit;pointer-events:none;overflow:hidden}
+.glass-sheen::before{content:'';position:absolute;inset:0;background:linear-gradient(115deg,transparent 32%,rgba(255,255,255,.14) 46%,transparent 58%);
+  transform:translateX(-130%);transition:transform 1s var(--ease)}
+.lift:hover .glass-sheen::before,.glass-sheen:hover::before,.glass-card:hover .glass-sheen::before{transform:translateX(130%)}
+.lift{transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s var(--ease)}
+.lift:hover{transform:translateY(-2px);border-color:var(--glass-border-strong);box-shadow:inset 0 1px 1px rgba(255,255,255,.28),inset 0 0 28px rgba(255,255,255,.07),0 14px 44px rgba(2,6,23,.5)}
+[data-theme="light"] .lift:hover{box-shadow:inset 0 1px 1px rgba(255,255,255,.6),0 14px 44px rgba(15,23,42,.16)}
+
+/* ============ HEADER ============ */
+.app-header{
+  position:sticky;top:0;z-index:40;height:var(--header-h);
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:0 clamp(14px,3vw,28px);
+  border-width:0 0 1px 0;border-radius:0;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:17px}
+.brand-logo{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;font-size:19px;color:#fff;
+  background:linear-gradient(135deg,#60a5fa,#a78bfa);box-shadow:0 4px 16px rgba(96,165,250,.45),inset 0 1px 1px rgba(255,255,255,.5)}
+.brand small{font-weight:500;color:var(--text3);font-size:12px;letter-spacing:0;margin-left:2px}
+.header-actions{display:flex;align-items:center;gap:10px}
+.badge{display:none;align-items:center;justify-content:center;min-width:24px;height:24px;padding:0 7px;border-radius:999px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:12px;font-weight:700;
+  box-shadow:0 2px 12px rgba(96,165,250,.5)}
+.badge.show{display:flex;animation:pop .3s var(--ease)}
+@keyframes pop{0%{transform:scale(.4)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+
+/* ============ BUTTONS ============ */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:44px;padding:0 18px;border-radius:14px;
+  font-weight:600;font-size:14px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);color:var(--text);
+  transition:transform .2s var(--ease),background .2s var(--ease),box-shadow .2s var(--ease),border-color .2s var(--ease);user-select:none}
+.btn:hover{border-color:var(--glass-border-strong);background:rgba(255,255,255,.1)}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;pointer-events:none}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;
+  box-shadow:0 6px 24px rgba(96,165,250,.4),inset 0 1px 1px rgba(255,255,255,.4)}
+.btn-primary:hover{box-shadow:0 8px 30px rgba(96,165,250,.55);background:linear-gradient(135deg,#7cb1fb,#b79cfb)}
+.btn-danger{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.35);color:#fca5a5}
+.btn-danger:hover{background:rgba(248,113,113,.24)}
+.icon-btn{width:44px;height:44px;min-width:44px;border-radius:13px;display:grid;place-items:center;font-size:20px;color:var(--text2);
+  border:1px solid transparent;transition:all .2s var(--ease)}
+.icon-btn:hover{color:var(--text);background:rgba(255,255,255,.08);border-color:var(--glass-border)}
+.icon-btn:active{transform:scale(.9)}
+.icon-btn .spin{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.ghost{min-height:40px;padding:0 12px;font-size:13px;border-radius:12px;color:var(--text2)}
+.ghost:hover{color:var(--text);background:rgba(255,255,255,.07)}
+
+/* ============ SETUP ============ */
+main{padding:0 16px}
+.setup{min-height:calc(100dvh - var(--header-h));display:grid;place-items:center;padding:40px 0 90px}
+.setup-card{width:min(480px,100%);border-radius:32px;padding:38px 32px;text-align:center;animation:fadeUp .6s var(--ease) both}
+.setup-logo{width:72px;height:72px;margin:0 auto 18px;border-radius:24px;display:grid;place-items:center;font-size:38px;color:#fff;
+  background:linear-gradient(135deg,#60a5fa,#a78bfa);box-shadow:0 10px 40px rgba(96,165,250,.5),inset 0 1px 1px rgba(255,255,255,.5);animation:float 6s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.setup-card h1{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-bottom:8px}
+.setup-card .sub{color:var(--text2);font-size:14px;line-height:1.55;margin-bottom:26px}
+.field{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.06);border:1px solid var(--glass-border);border-radius:16px;padding:6px 8px 6px 16px;margin-bottom:12px;transition:border-color .2s}
+.field:focus-within{border-color:var(--glass-border-strong);box-shadow:0 0 0 4px rgba(96,165,250,.15)}
+.field input{flex:1;background:none;border:none;outline:none;font-size:15px;min-height:40px;font-family:var(--mono);color:var(--text)}
+.field input::placeholder{color:var(--text3)}
+.at{color:var(--text3);font-weight:600}
+select#domainSelect{min-height:44px;padding:0 30px 0 14px;border-radius:12px;border:1px solid var(--glass-border);background:rgba(255,255,255,.06);font-size:14px;font-weight:600;color:var(--text);outline:none;width:100%;margin-bottom:16px;appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 256 256'%3E%3Cpath fill='%2394a3b8' d='M213.7 101.7l-80 80a8 8 0 0 1-11.4 0l-80-80a8.1 8.1 0 0 1 11.4-11.4L136 164.7l74.3-74.4a8.1 8.1 0 0 1 11.4 11.4z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+select#domainSelect:focus{border-color:var(--glass-border-strong)}
+#btnCreate{width:100%}
+#btnCreate i{font-size:18px}
+.setup-error{display:none;color:#fca5a5;font-size:13px;margin-top:10px}
+.setup-error.show{display:block}
+.setup-terms{color:var(--text3);font-size:12px;margin-top:18px;line-height:1.5}
+.setup .stagger>*{animation:fadeUp .55s var(--ease) both}
+.setup .stagger>*:nth-child(2){animation-delay:.08s}
+.setup .stagger>*:nth-child(3){animation-delay:.16s}
+.setup .stagger>*:nth-child(4){animation-delay:.24s}
+.setup .stagger>*:nth-child(5){animation-delay:.32s}
+
+/* ============ APP LAYOUT ============ */
+.app{display:grid;grid-template-columns:minmax(340px,38%) 1fr;gap:16px;max-width:1600px;margin:0 auto;padding:16px 0 24px;height:calc(100dvh - var(--header-h) - 12px);min-height:0;animation:fadeIn .45s var(--ease) both}
+.sidebar{display:flex;flex-direction:column;gap:14px;min-height:0;animation:fadeUp .5s var(--ease) both}
+.address-card{border-radius:var(--radius);padding:18px}
+.address-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--text3);margin-bottom:10px}
+.address-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.address{font-size:14.5px;font-weight:600;color:var(--text);word-break:break-all;line-height:1.35}
+.address-actions{display:flex;align-items:center;gap:6px}
+.address-actions .icon-btn{width:40px;height:40px;min-width:40px;font-size:18px}
+.address-footer{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.08)}
+.copy-feedback{display:none;align-items:center;gap:6px;color:var(--ok);font-size:12.5px;font-weight:600}
+.copy-feedback.show{display:flex;animation:pop .3s var(--ease)}
+.auto-hint{display:flex;align-items:center;gap:6px;color:var(--text3);font-size:12px}
+.auto-hint i{font-size:13px}
+.list-header{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 0}
+.list-header h2{font-size:15px;font-weight:700;letter-spacing:-.01em}
+.list-header .muted{color:var(--text3);font-size:12.5px;font-weight:500}
+.msg-list{flex:1;overflow-y:auto;min-height:0;display:flex;flex-direction:column;gap:8px;padding:6px 4px 12px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain}
+.msg-list::-webkit-scrollbar{width:6px}
+.msg-list::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:99px}
+.msg-item{width:100%;text-align:left;border-radius:18px;padding:14px 14px 14px 12px;display:flex;gap:12px;align-items:flex-start;
+  border:1px solid var(--glass-border);background:rgba(255,255,255,.045);transition:background .2s var(--ease),border-color .2s var(--ease),transform .2s var(--ease);position:relative}
+.msg-item:hover{background:rgba(255,255,255,.09);border-color:var(--glass-border-strong)}
+.msg-item.active{background:linear-gradient(135deg,rgba(96,165,250,.16),rgba(167,139,250,.1));border-color:rgba(96,165,250,.45)}
+.msg-item.incoming{animation:slideIn .5s var(--ease) both}
+@keyframes slideIn{from{opacity:0;transform:translateY(18px) scale(.98)}to{opacity:1;transform:none}}
+.avatar{width:40px;height:40px;min-width:40px;border-radius:13px;display:grid;place-items:center;font-size:13px;font-weight:700;color:#fff;
+  background:linear-gradient(135deg,rgba(96,165,250,.9),rgba(167,139,250,.9));box-shadow:inset 0 1px 1px rgba(255,255,255,.4)}
+.msg-main{flex:1;min-width:0}
+.msg-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.msg-sender{font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-time{font-size:11.5px;color:var(--text3);white-space:nowrap;font-weight:500}
+.msg-subject{font-size:13.5px;font-weight:600;color:var(--text);margin:3px 0 2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-intro{font-size:12.5px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.msg-item.unread .msg-sender,.msg-item.unread .msg-subject{font-weight:700}
+.msg-item.unread .msg-sender{color:var(--accent)}
+.msg-badges{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.msg-badges i{color:var(--text3);font-size:15px}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 10px var(--accent);animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ============ EMPTY STATE ============ */
+.empty{margin:14px auto;padding:44px 20px;text-align:center;border-radius:var(--radius);animation:fadeUp .5s var(--ease) both}
+.pulse-ring{position:relative;width:84px;height:84px;margin:0 auto 18px;display:grid;place-items:center;border-radius:50%;
+  background:linear-gradient(135deg,rgba(96,165,250,.2),rgba(167,139,250,.14));font-size:36px;color:var(--accent)}
+.pulse-ring::before,.pulse-ring::after{content:'';position:absolute;inset:0;border-radius:50%;border:1.5px solid rgba(96,165,250,.5);animation:ripple 2.6s var(--ease) infinite}
+.pulse-ring::after{animation-delay:1.3s}
+@keyframes ripple{0%{transform:scale(1);opacity:.8}100%{transform:scale(1.65);opacity:0}}
+.empty h3{font-size:15.5px;font-weight:700;margin-bottom:6px}
+.empty p{color:var(--text2);font-size:13px;line-height:1.5;max-width:280px;margin:0 auto}
+
+/* ============ SKELETON ============ */
+.skeleton{position:relative;overflow:hidden;background:rgba(255,255,255,.05);border-radius:10px}
+.skeleton::after{content:'';position:absolute;inset:0;transform:translateX(-100%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.09),transparent);animation:shimmer 1.4s infinite}
+[data-theme="light"] .skeleton{background:rgba(15,23,42,.07)}
+[data-theme="light"] .skeleton::after{background:linear-gradient(90deg,transparent,rgba(255,255,255,.7),transparent)}
+@keyframes shimmer{100%{transform:translateX(100%)}}
+.sk-row{display:flex;gap:12px;padding:14px;border-radius:18px;border:1px solid var(--glass-border);background:rgba(255,255,255,.03)}
+.sk-av{width:40px;height:40px;border-radius:13px}
+.sk-lines{flex:1;display:flex;flex-direction:column;gap:8px;padding-top:2px}
+.sk-l1{height:11px;width:45%}
+.sk-l2{height:12px;width:85%}
+.sk-l3{height:10px;width:60%}
+
+/* ============ READING PANE (desktop) ============ */
+.reading{border-radius:28px;overflow:hidden;min-height:0;display:flex;flex-direction:column;animation:fadeUp .5s var(--ease) .08s both}
+.reader-empty{flex:1;display:grid;place-items:center;color:var(--text3);font-size:14px;gap:12px}
+.reader-empty i{font-size:44px;opacity:.5}
+.reader{flex:1;display:flex;flex-direction:column;min-height:0}
+.reader-top{display:flex;align-items:flex-start;gap:12px;padding:20px 24px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.reader-top h2{flex:1;font-size:19px;font-weight:700;letter-spacing:-.02em;line-height:1.35;word-break:break-word}
+.reader-top-actions{display:flex;gap:6px}
+.reader-scroll{flex:1;overflow-y:auto;padding:18px 24px 40px;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.15) transparent}
+.reader-scroll::-webkit-scrollbar{width:6px}
+.reader-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.14);border-radius:99px}
+.meta-card{border-radius:18px;padding:16px 18px;margin-bottom:18px;border:1px solid var(--glass-border);background:rgba(255,255,255,.04)}
+.meta-row{display:flex;gap:12px;padding:5px 0;font-size:13px;line-height:1.5}
+.meta-label{min-width:54px;font-weight:700;color:var(--text3);font-size:11.5px;letter-spacing:.05em;padding-top:2px}
+.meta-value{color:var(--text);word-break:break-all;font-weight:500}
+.att-title{display:flex;align-items:center;gap:8px;font-size:12.5px;font-weight:700;color:var(--text3);letter-spacing:.05em;margin:14px 0 10px}
+.att{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid var(--glass-border);background:rgba(255,255,255,.04);margin-bottom:8px}
+.att i{font-size:20px;color:var(--accent)}
+.att-name{flex:1;font-size:13.5px;font-weight:600;word-break:break-all;min-width:0}
+.att-size{color:var(--text3);font-size:12px;white-space:nowrap}
+.att .icon-btn{width:38px;height:38px;min-width:38px;font-size:17px}
+.msg-body{margin-top:6px;font-size:14.5px;line-height:1.65;color:var(--text);word-wrap:break-word}
+.msg-body p{margin:0 0 14px}
+.msg-body a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.msg-body img{max-width:100%;height:auto;border-radius:12px}
+.msg-body blockquote{border-left:3px solid var(--accent);padding:2px 0 2px 14px;margin:0 0 14px;color:var(--text2)}
+.msg-body pre{background:rgba(0,0,0,.25);border:1px solid var(--glass-border);border-radius:12px;padding:14px;overflow-x:auto;font-family:var(--mono);font-size:13px;margin:0 0 14px}
+[data-theme="light"] .msg-body pre{background:rgba(15,23,42,.06)}
+.msg-body table{max-width:100%;border-collapse:collapse;margin-bottom:14px}
+.msg-body td,.msg-body th{border:1px solid var(--glass-border);padding:8px 10px;font-size:13.5px}
+.msg-body hr{border:none;border-top:1px solid var(--glass-border);margin:16px 0}
+.text-body{white-space:pre-wrap;font-family:var(--mono);font-size:13.5px;line-height:1.7;color:var(--text)}
+
+/* ============ SHEET (mobile reader) ============ */
+.sheet-overlay{position:fixed;inset:0;z-index:55;background:rgba(2,6,23,.55);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);opacity:0;transition:opacity .3s var(--ease)}
+.sheet-overlay.show{opacity:1}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;height:92dvh;border-radius:28px 28px 0 0;border-width:1px 0 0 0;
+  transform:translateY(105%);transition:transform .38s cubic-bezier(.32,.72,.2,1);display:flex;flex-direction:column;will-change:transform}
+.sheet.open{transform:translateY(0)}
+.sheet-handle{width:44px;height:5px;border-radius:99px;background:rgba(255,255,255,.25);margin:10px auto 2px;flex-shrink:0}
+.sheet-top{display:flex;align-items:flex-start;gap:10px;padding:8px 16px 12px}
+.sheet-top h2{flex:1;font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.35;word-break:break-word;padding-top:4px}
+.sheet-top-actions{display:flex;gap:6px}
+.sheet-scroll{flex:1;overflow-y:auto;padding:0 16px 40px;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.sheet-scroll::-webkit-scrollbar{display:none}
+
+/* ============ ACTION BAR (mobile) ============ */
+.action-bar{display:none}
+@media (max-width:1023px){
+  .action-bar{display:flex;position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;
+    gap:4px;padding:6px;border-radius:22px;align-items:center;box-shadow:0 12px 40px rgba(2,6,23,.55)}
+  .action-bar .icon-btn{width:52px;height:48px;min-width:52px}
+  .action-bar .btn-action{display:flex;flex-direction:column;align-items:center;gap:2px;padding:4px 14px;border-radius:16px;font-size:10px;font-weight:600;color:var(--text2);min-height:48px;justify-content:center;transition:all .2s var(--ease)}
+  .action-bar .btn-action i{font-size:19px}
+  .action-bar .btn-action:active{transform:scale(.92)}
+  .action-bar .btn-action:hover{color:var(--text);background:rgba(255,255,255,.07)}
+}
+@media (max-width:1023px){
+  .app{display:block;height:auto;padding:14px 0 120px}
+  .sidebar{min-height:auto}
+  .msg-list{overflow:visible;height:auto}
+  .reading{display:none}
+}
+
+/* ============ TOASTS ============ */
+.toasts{position:fixed;top:calc(var(--header-h) + 10px);left:50%;transform:translateX(-50%);z-index:100;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:min(92vw,420px)}
+.toast{display:flex;align-items:center;gap:10px;padding:12px 18px;border-radius:999px;font-size:13.5px;font-weight:600;
+  opacity:0;transform:translateY(-14px) scale(.94);transition:all .3s var(--ease);pointer-events:auto}
+.toast.show{opacity:1;transform:none}
+.toast i{font-size:18px}
+.toast.success i{color:var(--ok)}
+.toast.error i{color:var(--danger)}
+.toast.info i{color:var(--accent)}
+.toast.mail i{color:var(--accent2)}
+
+/* ============ MODALS ============ */
+.modal{position:fixed;inset:0;z-index:80;display:grid;place-items:center;padding:20px;background:rgba(2,6,23,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);animation:fadeIn .25s var(--ease) both}
+.modal-card{width:min(360px,100%);border-radius:28px;padding:26px;text-align:center;animation:pop .3s var(--ease) both}
+.modal-card h3{font-size:17px;font-weight:700;margin-bottom:14px;letter-spacing:-.01em}
+.modal-card p{color:var(--text2);font-size:14px;line-height:1.55;margin-bottom:20px}
+.qr-box{width:196px;height:196px;margin:0 auto 18px;border-radius:18px;background:#fff;padding:8px;display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+.qr-box canvas,.qr-box img{width:180px!important;height:180px!important;border-radius:10px}
+.qr-addr{font-family:var(--mono);font-size:12px;color:var(--text2);word-break:break-all;margin-bottom:18px;line-height:1.5}
+.modal-actions{display:flex;gap:10px}
+.modal-actions .btn{flex:1}
+
+/* ============ PULL TO REFRESH ============ */
+.pull-hint{position:fixed;top:calc(var(--header-h) + 8px);left:50%;transform:translateX(-50%) translateY(-60px);z-index:45;
+  padding:9px 18px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--text2);transition:transform .3s var(--ease);pointer-events:none;white-space:nowrap}
+.pull-hint.show{transform:translateX(-50%) translateY(0)}
+
+/* ============ ANIMATIONS / MOTION ============ */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .blob,.pulse-ring::before,.pulse-ring::after{animation:none!important}
+}
+</style>
 </head>
-<body class="bg-surface-950 text-neutral-300 min-h-screen flex flex-col">
+<body>
 
-    <!-- Header -->
-    <header class="sticky top-0 z-50 glass border-b border-white/5">
-        <div class="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-                <div class="w-8 h-8 rounded-lg bg-white text-black flex items-center justify-center font-bold text-sm">
-                    <i class="fa-solid fa-envelope"></i>
-                </div>
-                <span class="font-semibold text-white tracking-tight text-sm sm:text-base">TempMail</span>
-            </div>
-            <div class="flex items-center gap-3">
-                <select id="provider-select" onchange="switchProvider(this.value)"
-                    class="bg-surface-900 border border-white/10 text-xs sm:text-sm rounded-lg px-3 py-1.5 outline-none focus:border-white/25 transition cursor-pointer">
-                    <option value="mailtm">Mail.tm</option>
-                    <option value="1secmail">1SecMail</option>
-                    <option value="maildrop">Maildrop</option>
-                    <option disabled>──────────</option>
-                    <option value="guerrilla" disabled>Guerrilla Mail (soon)</option>
-                    <option value="tempmailorg" disabled>Temp-Mail.org (key req)</option>
-                    <option value="mailslurp" disabled>MailSlurp (key req)</option>
-                    <option value="tempail" disabled>Tempail (no API)</option>
-                    <option value="dispostable" disabled>Dispostable (no API)</option>
-                    <option value="fakemail" disabled>FakeMail (no API)</option>
-                    <option value="throwaway" disabled>ThrowAwayMail (soon)</option>
-                    <option value="tempmailio" disabled>TempMail.io (soon)</option>
-                    <option value="mohmal" disabled>Mohmal (soon)</option>
-                    <option value="getnada" disabled>GetNada (soon)</option>
-                    <option value="burnermail" disabled>BurnerMail (paid)</option>
-                    <option value="emailondeck" disabled>EmailOnDeck (soon)</option>
-                    <option value="tempmailo" disabled>TempMailo (no API)</option>
-                    <option value="discard" disabled>DiscardEmail (no API)</option>
-                    <option value="crazymailing" disabled>Crazymailing (no API)</option>
-                    <option value="tempinbox" disabled>TempInbox (no API)</option>
-                    <option value="boxmail" disabled>BoxMail (no API)</option>
-                </select>
-            </div>
+<!-- SVG filters: edge refraction + film grain -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <filter id="edgeRefract" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.012 0.018" numOctaves="2" seed="7" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="7" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="bg" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header class="app-header glass">
+  <div class="brand">
+    <span class="brand-logo"><i class="ph ph-drop-half"></i></span>
+    AuroraMail<small>temporary inbox</small>
+  </div>
+  <div class="header-actions">
+    <span class="badge" id="countBadge" aria-label="Unread messages"></span>
+    <button class="icon-btn" id="btnRefresh" aria-label="Refresh inbox" title="Refresh"><i class="ph ph-arrows-clockwise"></i></button>
+    <button class="icon-btn" id="btnTheme" aria-label="Toggle theme" title="Toggle theme"><i class="ph ph-moon-stars"></i></button>
+  </div>
+</header>
+
+<main>
+  <!-- ======== SETUP VIEW ======== -->
+  <section id="setupView" class="setup hidden">
+    <div class="setup-card glass lift stagger">
+      <div class="glass-sheen"></div><div class="glass-edge"></div>
+      <div class="setup-logo"><i class="ph ph-drop-half"></i></div>
+      <h1>Your private inbox,<br>in liquid glass.</h1>
+      <p class="sub">Generate a disposable address. No signup. No trace. Emails auto-refresh and disappear with one tap.</p>
+      <form id="formSetup" novalidate>
+        <div class="field">
+          <input id="username" type="text" autocomplete="off" spellcheck="false" maxlength="64" aria-label="Email username" placeholder="nova.kite7">
+          <button type="button" class="icon-btn" id="btnDice" aria-label="Randomize username" title="Randomize"><i class="ph ph-dice-five"></i></button>
         </div>
-    </header>
-
-    <!-- Main -->
-    <main class="flex-grow max-w-5xl w-full mx-auto px-4 py-6 sm:py-10 flex flex-col gap-5">
-
-        <!-- Address Card -->
-        <div class="glass rounded-2xl p-5 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-white font-semibold text-base sm:text-lg">Your temporary address</h1>
-                    <p class="text-neutral-500 text-xs mt-0.5" id="status-text">Select a provider to begin</p>
-                </div>
-                <div class="hidden sm:flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium text-neutral-500 border border-white/5 rounded-full px-2.5 py-1">
-                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    <span id="badge-text">Mail.tm</span>
-                </div>
-            </div>
-
-            <div class="flex flex-col sm:flex-row gap-2">
-                <div class="flex-1 bg-black/40 border border-white/10 rounded-xl px-4 py-3 flex items-center gap-3 min-w-0">
-                    <i class="fa-regular fa-envelope text-neutral-500 text-sm"></i>
-                    <span id="email-display" class="mono text-emerald-400 text-sm sm:text-base truncate">—</span>
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="copyEmail()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white text-black rounded-xl text-sm font-medium hover:bg-neutral-200 transition flex items-center justify-center gap-2">
-                        <i class="fa-regular fa-copy text-xs"></i>
-                        <span class="hidden sm:inline">Copy</span>
-                    </button>
-                    <button onclick="generateNewAccount()" class="flex-1 sm:flex-none px-4 py-2.5 bg-white/5 border border-white/10 text-white rounded-xl text-sm font-medium hover:bg-white/10 transition flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-arrows-rotate text-xs" id="gen-icon"></i>
-                        <span class="hidden sm:inline">New</span>
-                    </button>
-                </div>
-            </div>
-
-            <div class="flex items-center justify-between text-[11px] text-neutral-600">
-                <div class="flex items-center gap-2">
-                    <span id="status-dot" class="w-1.5 h-1.5 rounded-full bg-emerald-500/50 animate-pulse"></span>
-                    <span id="poll-status">Auto-refresh every 8s</span>
-                </div>
-                <span id="msg-count">0 messages</span>
-            </div>
+        <div class="field">
+          <span class="at">@</span>
+          <select id="domainSelect" aria-label="Choose domain">
+            <option value="">Loading domains…</option>
+          </select>
         </div>
-
-        <!-- Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-5 gap-4 flex-grow">
-            <!-- Inbox -->
-            <div class="lg:col-span-2 glass rounded-2xl flex flex-col h-[400px] sm:h-[480px] overflow-hidden">
-                <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-sm font-medium text-white">Inbox</span>
-                    <button onclick="refreshInbox()" class="w-7 h-7 rounded-lg hover:bg-white/5 flex items-center justify-center transition text-neutral-400">
-                        <i class="fa-solid fa-rotate text-[10px]" id="refresh-icon"></i>
-                    </button>
-                </div>
-                <div id="message-list" class="flex-1 overflow-y-auto p-2 space-y-1">
-                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2">
-                        <i class="fa-solid fa-inbox text-2xl"></i>
-                        <span class="text-xs">No messages yet</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Reader -->
-            <div class="lg:col-span-3 glass rounded-2xl flex flex-col h-[400px] sm:h-[480px] overflow-hidden">
-                <div class="px-4 py-3 border-b border-white/5 flex items-center justify-between">
-                    <span class="text-sm font-medium text-white">Message</span>
-                    <button onclick="deleteCurrentMessage()" id="delete-btn" class="hidden text-xs text-red-400 hover:text-red-300 transition">
-                        <i class="fa-regular fa-trash-can mr-1"></i>Delete
-                    </button>
-                </div>
-                <div id="message-view" class="flex-1 overflow-y-auto p-4 sm:p-6">
-                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 text-center">
-                        <i class="fa-regular fa-envelope-open text-3xl mb-1"></i>
-                        <span class="text-xs">Select a message to read</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
-
-    <!-- Footer -->
-    <footer class="border-t border-white/5 py-4 text-center text-[11px] text-neutral-700">
-        <p>Proxied via Vercel. No data stored on our servers.</p>
-    </footer>
-
-    <!-- Toast -->
-    <div id="toast" class="fixed bottom-5 right-5 z-50 translate-y-20 opacity-0 transition-all duration-300 bg-surface-900 border border-white/10 text-white px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 text-sm">
-        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
-        <span id="toast-msg">Done</span>
+        <button type="submit" class="btn btn-primary" id="btnCreate">Create Inbox <i class="ph ph-arrow-right"></i></button>
+        <div class="setup-error" id="setupError" role="alert"></div>
+      </form>
+      <p class="setup-terms">Random password generated per session · Stored only in your browser · Auto-refresh every 12s</p>
     </div>
+  </section>
 
-    <script>
-        let currentProvider = 'mailtm';
-        let account = null;
-        let messages = [];
-        let selectedId = null;
-        let pollTimer = null;
-        let abortCtrl = null;
+  <!-- ======== APP VIEW ======== -->
+  <section id="appView" class="app hidden">
+    <aside class="sidebar">
+      <div class="address-card glass lift">
+        <div class="glass-sheen"></div><div class="glass-edge"></div>
+        <div class="address-label">YOUR TEMP ADDRESS</div>
+        <div class="address-row">
+          <span id="addressText" class="address mono"></span>
+          <div class="address-actions">
+            <button class="icon-btn" id="btnCopy" aria-label="Copy email address" title="Copy"><i class="ph ph-copy"></i></button>
+            <button class="icon-btn" id="btnQR" aria-label="Show QR code" title="QR code"><i class="ph ph-qr-code"></i></button>
+          </div>
+        </div>
+        <div class="address-footer">
+          <span class="copy-feedback" id="copyFeedback"><i class="ph ph-check-circle"></i> Copied!</span>
+          <button class="ghost" id="btnNewAddress" aria-label="Generate a new address"><i class="ph ph-plus"></i> New Address</button>
+        </div>
+        <div class="auto-hint"><i class="ph ph-clock-counter-clockwise"></i> Auto-refresh every 12s</div>
+      </div>
 
-        // ─── Proxy Helper ───
-        async function proxyFetch(url, options = {}) {
-            if (abortCtrl) abortCtrl.abort();
-            abortCtrl = new AbortController();
+      <div class="list-header">
+        <h2>Inbox</h2>
+        <span class="muted" id="msgCount"></span>
+      </div>
 
-            const proxyUrl = `/api/proxy?targetUrl=${encodeURIComponent(url)}`;
-            const res = await fetch(proxyUrl, {
-                signal: abortCtrl.signal,
-                method: options.method || 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    ...(options.headers?.Authorization ? { 'Authorization': options.headers.Authorization } : {})
-                },
-                ...(options.body ? { body: typeof options.body === 'string' ? options.body : JSON.stringify(options.body) } : {})
-            });
+      <div id="msgList" class="msg-list" role="list" aria-label="Messages"></div>
+      <div id="emptyState" class="empty glass hidden">
+        <div class="glass-edge"></div>
+        <div class="pulse-ring"><i class="ph ph-envelope-simple-open"></i></div>
+        <h3>Waiting for emails…</h3>
+        <p>This address is live. Send something to it from anywhere — it will glide in here.</p>
+      </div>
+    </aside>
 
-            const data = await res.json().catch(() => ({}));
-            if (!res.ok) throw new Error(data.error || data._raw || `HTTP ${res.status}`);
-            return data;
-        }
+    <section id="readingPane" class="reading glass" aria-label="Message reader">
+      <div class="glass-edge"></div>
+      <div id="readerEmpty" class="reader-empty">
+        <div><i class="ph ph-article"></i><p style="margin-top:10px">Select a message to read</p></div>
+      </div>
+      <div id="readerContent" class="reader hidden">
+        <div class="reader-top">
+          <h2 id="readerTitle"></h2>
+          <div class="reader-top-actions">
+            <button class="icon-btn" id="btnMarkRead" aria-label="Toggle read status" title="Read status"><i class="ph ph-envelope-open"></i></button>
+            <button class="icon-btn" id="btnDeleteMsg" aria-label="Delete message" title="Delete"><i class="ph ph-trash"></i></button>
+            <button class="icon-btn" id="btnCloseReader" aria-label="Back to inbox" title="Back"><i class="ph ph-arrow-left"></i></button>
+          </div>
+        </div>
+        <div class="reader-scroll">
+          <div id="readerMeta" class="meta-card"></div>
+          <div id="readerAtts"></div>
+          <div id="readerBody" class="msg-body"></div>
+        </div>
+      </div>
+    </section>
+  </section>
+</main>
 
-        // ─── Providers ───
-        const providers = {
-            mailtm: {
-                name: 'Mail.tm',
-                async generate() {
-                    const domData = await proxyFetch('https://api.mail.tm/domains');
-                    const domain = domData['hydra:member']?.[0]?.domain;
-                    if (!domain) throw new Error('No domains available');
-                    const user = Math.random().toString(36).slice(2, 10);
-                    const address = `${user}@${domain}`;
-                    const password = Math.random().toString(36).slice(2, 15);
+<!-- ======== MOBILE SHEET ======== -->
+<div id="sheetOverlay" class="sheet-overlay" aria-hidden="true"></div>
+<section id="sheet" class="sheet glass" role="dialog" aria-modal="true" aria-label="Message reader" aria-hidden="true">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <div class="sheet-top">
+    <h2 id="sheetTitle"></h2>
+    <div class="sheet-top-actions">
+      <button class="icon-btn" id="sheetMark" aria-label="Toggle read status"><i class="ph ph-envelope-open"></i></button>
+      <button class="icon-btn" id="sheetDelete" aria-label="Delete message"><i class="ph ph-trash"></i></button>
+      <button class="icon-btn" id="sheetClose" aria-label="Close message"><i class="ph ph-x"></i></button>
+    </div>
+  </div>
+  <div class="sheet-scroll">
+    <div id="sheetMeta"></div>
+    <div id="sheetAtts"></div>
+    <div id="sheetBody" class="msg-body"></div>
+  </div>
+</section>
 
-                    await proxyFetch('https://api.mail.tm/accounts', {
-                        method: 'POST',
-                        body: { address, password }
-                    });
+<!-- ======== MOBILE ACTION BAR ======== -->
+<nav class="action-bar glass" id="actionBar" aria-label="Quick actions">
+  <button class="btn-action" id="btnCopyBottom" aria-label="Copy email address"><i class="ph ph-copy"></i>Copy</button>
+  <button class="btn-action" id="btnRefreshBottom" aria-label="Refresh inbox"><i class="ph ph-arrows-clockwise"></i>Refresh</button>
+  <button class="btn-action" id="btnNewBottom" aria-label="Generate new address"><i class="ph ph-plus"></i>New</button>
+</nav>
 
-                    const tokData = await proxyFetch('https://api.mail.tm/token', {
-                        method: 'POST',
-                        body: { address, password }
-                    });
+<!-- ======== TOASTS ======== -->
+<div id="toasts" class="toasts" aria-live="polite"></div>
 
-                    return { address, token: tokData.token, password };
-                },
-                async getMessages(acc) {
-                    const data = await proxyFetch('https://api.mail.tm/messages', {
-                        headers: { Authorization: `Bearer ${acc.token}` }
-                    });
-                    return (data['hydra:member'] || []).map(m => ({
-                        id: m.id,
-                        from: m.from?.name || m.from?.address || 'Unknown',
-                        fromAddr: m.from?.address || '',
-                        subject: m.subject || '(No subject)',
-                        preview: m.intro || '',
-                        date: new Date(m.createdAt)
-                    }));
-                },
-                async getMessage(acc, id) {
-                    const m = await proxyFetch(`https://api.mail.tm/messages/${id}`, {
-                        headers: { Authorization: `Bearer ${acc.token}` }
-                    });
-                    return {
-                        id: m.id,
-                        from: m.from?.name || m.from?.address || 'Unknown',
-                        fromAddr: m.from?.address || '',
-                        to: m.to?.[0]?.address || acc.address,
-                        subject: m.subject || '(No subject)',
-                        date: new Date(m.createdAt),
-                        html: m.html || '',
-                        text: m.text || m.intro || '(No content)'
-                    };
-                },
-                async deleteMessage(acc, id) {
-                    await proxyFetch(`https://api.mail.tm/messages/${id}`, {
-                        method: 'DELETE',
-                        headers: { Authorization: `Bearer ${acc.token}` }
-                    });
-                }
-            },
+<!-- ======== QR MODAL ======== -->
+<div id="qrModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="QR code">
+  <div class="modal-card glass">
+    <div class="glass-edge"></div>
+    <h3>Scan to copy</h3>
+    <div class="qr-box" id="qrBox"></div>
+    <p class="qr-addr" id="qrAddr"></p>
+    <div class="modal-actions"><button class="btn" id="btnCloseQR">Close</button></div>
+  </div>
+</div>
 
-            '1secmail': {
-                name: '1SecMail',
-                async generate() {
-                    const data = await proxyFetch('https://www.1secmail.com/api/v1/?action=genRandomMailbox&count=1');
-                    if (!Array.isArray(data) || !data[0]) throw new Error('Failed to generate mailbox');
-                    const [login, domain] = data[0].split('@');
-                    return { address: data[0], login, domain };
-                },
-                async getMessages(acc) {
-                    const data = await proxyFetch(`https://www.1secmail.com/api/v1/?action=getMessages&login=${acc.login}&domain=${acc.domain}`);
-                    if (!Array.isArray(data)) return [];
-                    return data.map(m => ({
-                        id: String(m.id),
-                        from: m.from || 'Unknown',
-                        fromAddr: m.from || '',
-                        subject: m.subject || '(No subject)',
-                        preview: '',
-                        date: new Date(m.date)
-                    }));
-                },
-                async getMessage(acc, id) {
-                    const m = await proxyFetch(`https://www.1secmail.com/api/v1/?action=readMessage&login=${acc.login}&domain=${acc.domain}&id=${id}`);
-                    return {
-                        id: String(m.id),
-                        from: m.from || 'Unknown',
-                        fromAddr: m.from || '',
-                        to: m.to || acc.address,
-                        subject: m.subject || '(No subject)',
-                        date: new Date(m.date),
-                        html: m.htmlBody || '',
-                        text: m.body || '(No content)'
-                    };
-                },
-                async deleteMessage() {
-                    // 1SecMail auto-deletes; no endpoint
-                }
-            },
+<!-- ======== CONFIRM MODAL ======== -->
+<div id="confirmModal" class="modal hidden" role="dialog" aria-modal="true" aria-label="Confirm">
+  <div class="modal-card glass">
+    <div class="glass-edge"></div>
+    <h3 id="confirmTitle">Are you sure?</h3>
+    <p id="confirmText"></p>
+    <div class="modal-actions">
+      <button class="btn btn-danger" id="confirmYes">Confirm</button>
+      <button class="btn" id="confirmNo">Cancel</button>
+    </div>
+  </div>
+</div>
 
-            maildrop: {
-                name: 'Maildrop',
-                async generate() {
-                    const prefix = 'tmp' + Math.random().toString(36).slice(2, 10);
-                    return { address: `${prefix}@maildrop.cc`, prefix };
-                },
-                async getMessages(acc) {
-                    const data = await proxyFetch(`https://api.maildrop.cc/v2/mailbox/${acc.prefix}`);
-                    if (!data || !Array.isArray(data.messages)) return [];
-                    return data.messages.map(m => ({
-                        id: m.id,
-                        from: m.from || 'Unknown',
-                        fromAddr: m.from || '',
-                        subject: m.subject || '(No subject)',
-                        preview: '',
-                        date: new Date(m.date)
-                    }));
-                },
-                async getMessage(acc, id) {
-                    const m = await proxyFetch(`https://api.maildrop.cc/v2/mailbox/${acc.prefix}/${id}`);
-                    return {
-                        id: m.id,
-                        from: m.from || 'Unknown',
-                        fromAddr: m.from || '',
-                        to: acc.address,
-                        subject: m.subject || '(No subject)',
-                        date: new Date(m.date),
-                        html: m.body || '',
-                        text: m.body || '(No content)'
-                    };
-                },
-                async deleteMessage() {}
-            }
-        };
+<div id="pullHint" class="pull-hint glass" role="status"></div>
 
-        // ─── UI Helpers ───
-        function toast(msg, type = 'success') {
-            const el = document.getElementById('toast');
-            const icon = document.getElementById('toast-icon');
-            document.getElementById('toast-msg').textContent = msg;
-            icon.className = type === 'success'
-                ? 'fa-solid fa-circle-check text-emerald-400'
-                : 'fa-solid fa-circle-exclamation text-amber-400';
-            el.classList.remove('translate-y-20', 'opacity-0');
-            setTimeout(() => el.classList.add('translate-y-20', 'opacity-0'), 2500);
-        }
+<script>
+'use strict';
+/* ================= CONSTANTS ================= */
+const API = 'https://api.mail.tm';
+const LS_ACCOUNT = 'auroraMail.account.v1';
+const LS_THEME = 'auroraMail.theme.v1';
+const POLL_MS = 12000;
+const FALLBACK_DOMAINS = ['choco.la','bbsemail.xyz','mailto.plus'];
+const NAME_PARTS = ['nova','luna','astra','echo','pulse','drift','mira','onyx','sol','vibe','nimbus','quill','fern','orbit','halo','zephyr','kite','peak','iris','lumen'];
 
-        function setStatus(text) {
-            document.getElementById('status-text').textContent = text;
-        }
+/* ================= STATE ================= */
+const state = {
+  account: null,        // { address, password, token, id }
+  messages: [],         // latest summaries
+  ids: new Set(),
+  msgEls: new Map(),    // id -> element
+  domains: [],
+  selectedId: null,
+  refreshing: false,
+  pollTimer: null,
+  theme: localStorage.getItem(LS_THEME) || 'dark',
+  blobUrls: []
+};
 
-        function escapeHtml(str) {
-            if (!str) return '';
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
+/* ================= HELPERS ================= */
+const $ = s => document.querySelector(s);
+const $$ = s => Array.from(document.querySelectorAll(s));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
-        // ─── Core ───
-        async function switchProvider(val) {
-            if (!providers[val]) return;
-            currentProvider = val;
-            document.getElementById('badge-text').textContent = providers[val].name;
-            document.getElementById('provider-select').value = val;
-            if (pollTimer) clearInterval(pollTimer);
-            await generateNewAccount();
-        }
+class ApiError extends Error { constructor(msg, status = 0){ super(msg); this.status = status; } }
 
-        async function generateNewAccount() {
-            const icon = document.getElementById('gen-icon');
-            icon.classList.add('spin');
-            setStatus('Creating mailbox...');
-            document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse';
+function randPassword(len = 24){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+  const a = new Uint32Array(len); crypto.getRandomValues(a);
+  return Array.from(a, n => chars[n % chars.length]).join('');
+}
+function randUsername(){
+  const a = NAME_PARTS[Math.floor(Math.random() * NAME_PARTS.length)];
+  const b = NAME_PARTS[Math.floor(Math.random() * NAME_PARTS.length)];
+  const n = Math.floor(Math.random() * 900) + 100;
+  return a + '.' + b + n;
+}
+function timeAgo(iso){
+  if (!iso) return '';
+  const s = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (s < 45) return 'just now';
+  if (s < 3600) return Math.floor(s / 60) + ' min ago';
+  if (s < 86400) return Math.floor(s / 3600) + ' hr ago';
+  if (s < 604800) return Math.floor(s / 86400) + 'd ago';
+  return new Date(iso).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+function fmtSize(b){
+  if (b == null) return '';
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b / 1024).toFixed(1) + ' KB';
+  return (b / 1048576).toFixed(1) + ' MB';
+}
+function initials(name){
+  const s = String(name || '?').trim();
+  const words = s.split(/[\s@._]+/).filter(Boolean);
+  if (words.length >= 2) return (words[0][0] + words[1][0]).toUpperCase();
+  return s.slice(0, 2).toUpperCase();
+}
+function isDesktop(){ return window.matchMedia('(min-width: 1024px)').matches; }
+function isMobile(){ return !window.matchMedia('(min-width: 1024px)').matches; }
 
-            try {
-                account = await providers[currentProvider].generate();
-                messages = [];
-                selectedId = null;
-                document.getElementById('email-display').textContent = account.address;
-                renderList();
-                resetView();
-                toast('New address ready');
-                setStatus('Active — waiting for mail');
-                document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+/* ================= API ================= */
+async function api(path, { method = 'GET', body = null, auth = true, _authRetry = false } = {}){
+  const headers = { 'Accept': 'application/json' };
+  if (body != null) headers['Content-Type'] = method === 'PATCH' ? 'application/merge-patch+json' : 'application/json';
+  if (auth && state.account?.token) headers['Authorization'] = 'Bearer ' + state.account.token;
 
-                if (pollTimer) clearInterval(pollTimer);
-                pollTimer = setInterval(refreshInbox, 8000);
-            } catch (e) {
-                console.error(e);
-                toast(e.message || 'Failed to create address', 'error');
-                setStatus('Error — try again');
-                document.getElementById('status-dot').className = 'w-1.5 h-1.5 rounded-full bg-red-500';
-            } finally {
-                icon.classList.remove('spin');
-            }
-        }
+  let res;
+  try {
+    res = await fetch(API + path, { method, headers, body: body != null ? JSON.stringify(body) : undefined });
+  } catch (e) {
+    if (!_authRetry) throw new ApiError('Network error — check your connection', 0);
+    throw e;
+  }
 
-        function copyEmail() {
-            if (!account?.address) return;
-            navigator.clipboard.writeText(account.address);
-            toast('Copied to clipboard');
-        }
+  if (res.status === 429) throw new ApiError('Too many requests — wait a moment', 429);
+  if (res.status === 401 && auth && !_authRetry) {
+    try {
+      await ensureAuth();
+      return api(path, { method, body, auth, _authRetry: true });
+    } catch (e) {
+      if (e.status !== 429) handleSessionExpired();
+      throw e;
+    }
+  }
+  if (!res.ok) {
+    let text = '';
+    try { text = await res.text(); } catch (e) {}
+    throw new ApiError(text || res.statusText, res.status);
+  }
+  return res.status === 204 ? null : res.json();
+}
 
-        async function refreshInbox() {
-            if (!account) return;
-            const icon = document.getElementById('refresh-icon');
-            icon.classList.add('spin');
-            try {
-                messages = await providers[currentProvider].getMessages(account);
-                renderList();
-                setStatus(`Synced at ${new Date().toLocaleTimeString()}`);
-            } catch (e) {
-                console.error(e);
-                setStatus('Sync failed');
-            } finally {
-                setTimeout(() => icon.classList.remove('spin'), 400);
-            }
-        }
+async function ensureAuth(){
+  if (!state.account) throw new ApiError('No account', 401);
+  const r = await api('/token', { method: 'POST', auth: false, body: { address: state.account.address, password: state.account.password } });
+  state.account.token = r.token;
+  saveSession();
+}
 
-        function renderList() {
-            const container = document.getElementById('message-list');
-            document.getElementById('msg-count').textContent = `${messages.length} message${messages.length !== 1 ? 's' : ''}`;
+/* ================= SESSION ================= */
+function saveSession(){
+  try { localStorage.setItem(LS_ACCOUNT, JSON.stringify(state.account)); } catch (e) {}
+}
+function loadSession(){
+  try { return JSON.parse(localStorage.getItem(LS_ACCOUNT)); } catch (e) { return null; }
+}
+function clearSession(){
+  state.account = null;
+  state.messages = []; state.ids.clear(); state.msgEls.clear();
+  stopPolling();
+  try { localStorage.removeItem(LS_ACCOUNT); } catch (e) {}
+}
+function handleSessionExpired(){
+  clearSession();
+  showSetup();
+  toast('Session expired — generate a new address', 'error');
+}
 
-            if (messages.length === 0) {
-                container.innerHTML = `
-                    <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 fade-in">
-                        <i class="fa-solid fa-inbox text-2xl"></i>
-                        <span class="text-xs">No messages yet</span>
-                    </div>`;
-                return;
-            }
+/* ================= DOMAIN ================= */
+async function loadDomains(){
+  try {
+    const data = await api('/domains', { auth: false });
+    let list = (data['hydra:member'] || data || []).filter(d => d.isActive !== false);
+    if (list.some(d => !d.isPrivate)) list = list.filter(d => !d.isPrivate);
+    state.domains = list.map(d => d.domain.replace(/^@/, ''));
+    if (!state.domains.length) throw new Error('no domains');
+  } catch (e) {
+    state.domains = FALLBACK_DOMAINS;
+    if (e.status !== 0) toast('Could not reach domains — using fallback list', 'info');
+  }
+  const sel = $('#domainSelect');
+  sel.innerHTML = state.domains.map(d => `<option value="${esc(d)}">@${esc(d)}</option>`).join('');
+  sel.disabled = false;
+}
 
-            container.innerHTML = messages.map(m => {
-                const time = m.date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const active = m.id === selectedId ? 'bg-white/5 border-l-2 border-white' : 'hover:bg-white/[0.02] border-l-2 border-transparent';
-                return `
-                    <div onclick="selectMessage('${m.id}')" class="${active} rounded-lg px-3 py-2.5 cursor-pointer transition fade-in">
-                        <div class="flex items-center justify-between mb-0.5">
-                            <span class="text-xs font-medium text-white truncate max-w-[140px]">${escapeHtml(m.from)}</span>
-                            <span class="text-[10px] text-neutral-600">${time}</span>
-                        </div>
-                        <div class="text-xs text-neutral-300 truncate">${escapeHtml(m.subject)}</div>
-                        ${m.preview ? `<div class="text-[11px] text-neutral-600 truncate">${escapeHtml(m.preview)}</div>` : ''}
-                    </div>
-                `;
-            }).join('');
-        }
+/* ================= ACCOUNT CREATION ================= */
+async function createAccount(username, domain){
+  const address = `${username}@${domain}`;
+  const password = randPassword();
+  let acct = null;
 
-        async function selectMessage(id) {
-            selectedId = id;
-            renderList();
-            const view = document.getElementById('message-view');
-            document.getElementById('delete-btn').classList.remove('hidden');
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const addr = attempt === 0 ? address : `${randUsername()}@${domain}`;
+    try {
+      acct = await api('/accounts', { method: 'POST', auth: false, body: { address: addr, password } });
+      break;
+    } catch (e) {
+      if (e.status === 422 && attempt < 2) continue;   // address taken -> retry with a fresh name
+      if (e.status === 422) throw new ApiError('That address is taken — hit the dice and try again', 422);
+      throw e;
+    }
+  }
 
-            view.innerHTML = `<div class="h-full flex items-center justify-center fade-in"><i class="fa-solid fa-circle-notch spin text-neutral-500"></i></div>`;
+  const tokenRes = await api('/token', { method: 'POST', auth: false, body: { address: acct.address, password } });
+  state.account = { address: acct.address, password, token: tokenRes.token, id: acct.id };
+  saveSession();
+  enterApp();
+  refreshMessages(true);
+}
 
-            try {
-                const m = await providers[currentProvider].getMessage(account, id);
-                const dateStr = m.date.toLocaleString();
-                const body = m.html
-                    ? `<iframe class="w-full h-72 sm:h-96 bg-white rounded-lg border border-white/10" sandbox="allow-same-origin" srcdoc="${escapeHtml(m.html)}"></iframe>`
-                    : `<pre class="whitespace-pre-wrap text-sm text-neutral-300 font-sans">${escapeHtml(m.text)}</pre>`;
+/* ================= VIEWS ================= */
+function showSetup(){
+  stopPolling();
+  $('#setupView').classList.remove('hidden');
+  $('#appView').classList.add('hidden');
+  $('#actionBar').classList.add('hidden');
+  $('#btnRefresh').classList.add('hidden');
+  $('#countBadge').classList.remove('show');
+  if (!state.account) $('#username').value = randUsername();
+  const err = $('#setupError'); err.classList.remove('show'); err.textContent = '';
+  window.scrollTo(0, 0);
+}
 
-                view.innerHTML = `
-                    <div class="space-y-4 fade-in">
-                        <div class="border-b border-white/5 pb-3">
-                            <h2 class="text-white font-semibold text-base mb-1">${escapeHtml(m.subject)}</h2>
-                            <div class="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-neutral-500">
-                                <span><span class="text-neutral-400">From:</span> ${escapeHtml(m.fromAddr)}</span>
-                                <span><span class="text-neutral-400">To:</span> ${escapeHtml(m.to)}</span>
-                                <span><span class="text-neutral-400">Date:</span> ${dateStr}</span>
-                            </div>
-                        </div>
-                        <div>${body}</div>
-                    </div>
-                `;
-            } catch (e) {
-                view.innerHTML = `<div class="text-red-400 text-sm fade-in">Failed to load message</div>`;
-            }
-        }
+function enterApp(){
+  $('#setupView').classList.add('hidden');
+  $('#appView').classList.remove('hidden');
+  $('#actionBar').classList.remove('hidden');
+  $('#btnRefresh').classList.remove('hidden');
+  $('#addressText').textContent = state.account.address;
+  $('#qrAddr').textContent = state.account.address;
+  renderSkeletons();
+  updateEmptyState();
+  updateCounts();
+  closeReader();
+}
 
-        async function deleteCurrentMessage() {
-            if (!selectedId) return;
-            try {
-                await providers[currentProvider].deleteMessage(account, selectedId);
-                messages = messages.filter(m => m.id !== selectedId);
-                selectedId = null;
-                renderList();
-                resetView();
-                toast('Deleted');
-            } catch (e) {
-                toast('Delete failed', 'error');
-            }
-        }
+function renderSkeletons(){
+  const list = $('#msgList');
+  list.innerHTML = '';
+  for (let i = 0; i < 4; i++) {
+    const row = document.createElement('div');
+    row.className = 'sk-row';
+    row.innerHTML = `<div class="skeleton sk-av"></div><div class="sk-lines"><div class="skeleton sk-l1"></div><div class="skeleton sk-l2"></div><div class="skeleton sk-l3"></div></div>`;
+    list.appendChild(row);
+  }
+}
 
-        function resetView() {
-            document.getElementById('message-view').innerHTML = `
-                <div class="h-full flex flex-col items-center justify-center text-neutral-600 gap-2 text-center fade-in">
-                    <i class="fa-regular fa-envelope-open text-3xl mb-1"></i>
-                    <span class="text-xs">Select a message to read</span>
-                </div>`;
-            document.getElementById('delete-btn').classList.add('hidden');
-        }
+/* ================= MESSAGES ================= */
+async function refreshMessages(silent = false){
+  if (state.refreshing) return;
+  state.refreshing = true;
+  setRefreshBusy(true);
+  try {
+    const data = await api('/messages?page=1');
+    const list = (data['hydra:member'] || data || []).slice();
+    list.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    diffMessages(list, silent);
+  } catch (e) {
+    if (e.status !== 401) toast(e.status === 429 ? 'Rate limited — slowing down' : 'Refresh failed', 'error');
+  } finally {
+    state.refreshing = false;
+    setRefreshBusy(false);
+    schedulePoll();
+  }
+}
 
-        // ─── Init ───
-        window.addEventListener('DOMContentLoaded', () => {
-            generateNewAccount();
-        });
-    </script>
+function schedulePoll(){
+  clearTimeout(state.pollTimer);
+  if (!state.account) return;
+  state.pollTimer = setTimeout(() => refreshMessages(), POLL_MS);
+}
+function stopPolling(){ clearTimeout(state.pollTimer); }
+
+function diffMessages(list, silent){
+  const incoming = new Set(list.map(m => m.id));
+
+  // remove stale
+  for (const id of state.ids) {
+    if (!incoming.has(id)) {
+      state.msgEls.get(id)?.remove();
+      state.msgEls.delete(id);
+      state.ids.delete(id);
+    }
+  }
+
+  // add / update
+  for (const msg of list) {
+    if (!state.ids.has(msg.id)) {
+      state.ids.add(msg.id);
+      const el = msgEl(msg);
+      state.msgEls.set(msg.id, el);
+      const listEl = $('#msgList');
+      listEl.prepend(el);
+      if (!silent && !msg.seen) {
+        toast(`New mail from ${msg.from?.name || msg.from?.address || 'unknown'}`, 'mail');
+        el.classList.add('incoming');
+        el.addEventListener('animationend', () => el.classList.remove('incoming'), { once: true });
+      }
+    } else {
+      const el = state.msgEls.get(msg.id);
+      if (el && el.dataset.seen !== String(msg.seen)) {
+        el.classList.toggle('unread', !msg.seen);
+        el.dataset.seen = String(msg.seen);
+      }
+    }
+  }
+  state.messages = list;
+  updateEmptyState();
+  updateCounts();
+}
+
+function msgEl(msg){
+  const el = document.createElement('button');
+  el.type = 'button';
+  el.className = 'msg-item' + (msg.seen ? '' : ' unread');
+  el.dataset.id = msg.id;
+  el.dataset.seen = String(!!msg.seen);
+  el.setAttribute('role', 'listitem');
+  el.setAttribute('aria-label',
+    `${msg.seen ? '' : 'Unread. '}From ${msg.from?.name || msg.from?.address || 'unknown'}. ${msg.subject || '(no subject)'}`);
+  el.innerHTML = `
+    <span class="avatar" aria-hidden="true">${esc(initials(msg.from?.name || msg.from?.address))}</span>
+    <span class="msg-main">
+      <span class="msg-top">
+        <span class="msg-sender">${esc(msg.from?.name || msg.from?.address || 'Unknown')}</span>
+        <span class="msg-time" data-time="${esc(msg.createdAt)}">${timeAgo(msg.createdAt)}</span>
+      </span>
+      <span class="msg-subject">${esc(msg.subject || '(no subject)')}</span>
+      <span class="msg-intro">${esc(msg.intro || '')}</span>
+    </span>
+    <span class="msg-badges" aria-hidden="true">
+      ${msg.hasAttachments ? '<i class="ph ph-paperclip"></i>' : ''}
+      ${msg.seen ? '' : '<span class="dot"></span>'}
+    </span>`;
+  el.addEventListener('click', () => openMessage(msg.id));
+  return el;
+}
+
+function updateEmptyState(){
+  const empty = $('#emptyState');
+  const list = $('#msgList');
+  const has = state.messages.length > 0;
+  empty.classList.toggle('hidden', has);
+  list.classList.toggle('hidden', !has);
+  if (!has) list.innerHTML = '';
+}
+
+function updateCounts(){
+  const unread = state.messages.filter(m => !m.seen).length;
+  const badge = $('#countBadge');
+  badge.textContent = unread;
+  badge.classList.toggle('show', unread > 0);
+  $('#msgCount').textContent = state.messages.length === 0 ? 'empty' :
+    `${state.messages.length} message${state.messages.length === 1 ? '' : 's'}`;
+}
+
+function setRefreshBusy(busy){
+  $$('#btnRefresh i, #btnRefreshBottom i').forEach(i => i.classList.toggle('spin', busy));
+  $('#btnRefresh').disabled = busy;
+  $('#btnRefreshBottom').disabled = busy;
+}
+
+/* ================= READ MESSAGE ================= */
+async function openMessage(id){
+  state.selectedId = id;
+  $$('.msg-item').forEach(el => el.classList.toggle('active', el.dataset.id === id));
+
+  const target = isDesktop() ? 'reader' : 'sheet';
+  renderReaderSkeleton(target);
+  if (target === 'sheet') openSheet();
+
+  try {
+    const detail = await api('/messages/' + id);
+    renderDetail(detail, target);
+    if (!detail.seen) {
+      const local = state.messages.find(m => m.id === id);
+      if (local) { local.seen = true; updateMsgSeen(id, true); }
+      try { await api('/messages/' + id, { method: 'PATCH', body: { seen: true } }); } catch (e) {}
+    }
+  } catch (e) {
+    if (e.status !== 401) toast('Could not load this message', 'error');
+  }
+}
+
+function updateMsgSeen(id, seen){
+  const el = state.msgEls.get(id);
+  if (el) {
+    el.classList.toggle('unread', !seen);
+    el.dataset.seen = String(seen);
+    const badges = el.querySelector('.msg-badges');
+    if (badges) {
+      const dot = badges.querySelector('.dot'); dot?.remove();
+      if (!seen && !badges.querySelector('.dot')) badges.insertAdjacentHTML('beforeend', '<span class="dot"></span>');
+    }
+  }
+  updateCounts();
+}
+
+function renderReaderSkeleton(target){
+  const body = target === 'reader' ? $('#readerBody') : $('#sheetBody');
+  const meta = target === 'reader' ? $('#readerMeta') : $('#sheetMeta');
+  const atts = target === 'reader' ? $('#readerAtts') : $('#sheetAtts');
+  const title = target === 'reader' ? $('#readerTitle') : $('#sheetTitle');
+  title.textContent = 'Loading…';
+  meta.innerHTML = '<div class="skeleton" style="height:96px"></div>';
+  atts.innerHTML = '';
+  body.innerHTML = '<div class="skeleton" style="height:200px;margin-top:4px"></div>';
+  if (target === 'reader') {
+    $('#readerEmpty').classList.add('hidden');
+    $('#readerContent').classList.remove('hidden');
+  }
+}
+
+function renderDetail(d, target){
+  const title = target === 'reader' ? $('#readerTitle') : $('#sheetTitle');
+  const meta = target === 'reader' ? $('#readerMeta') : $('#sheetMeta');
+  const atts = target === 'reader' ? $('#readerAtts') : $('#sheetAtts');
+  const body = target === 'reader' ? $('#readerBody') : $('#sheetBody');
+
+  title.textContent = d.subject || '(no subject)';
+
+  const row = (label, val) => val ? `<div class="meta-row"><span class="meta-label">${label}</span><span class="meta-value">${val}</span></div>` : '';
+  const addr = a => a ? esc(a.name ? `${a.name} <${a.address}>` : a.address) : '';
+  const date = new Date(d.createdAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
+  meta.innerHTML =
+    row('FROM', addr(d.from)) +
+    row('TO', (d.to || []).map(addr).join(', ')) +
+    row('CC', (d.cc || []).map(addr).join(', ')) +
+    row('BCC', (d.bcc || []).map(addr).join(', ')) +
+    row('DATE', esc(date));
+
+  const attachments = d.attachments || [];
+  atts.innerHTML = attachments.length ? `
+    <div class="att-title"><i class="ph ph-paperclip"></i> ${attachments.length} attachment${attachments.length > 1 ? 's' : ''}</div>
+    ${attachments.map(a => `
+      <div class="att">
+        <i class="ph ph-file" aria-hidden="true"></i>
+        <span class="att-name">${esc(a.filename)}</span>
+        <span class="att-size">${fmtSize(a.size)}</span>
+        <button class="icon-btn" data-dl="${esc(a.downloadUrl)}" data-name="${esc(a.filename)}" aria-label="Download ${esc(a.filename)}"><i class="ph ph-download-simple"></i></button>
+      </div>`).join('')}` : '';
+
+  // body
+  let html = Array.isArray(d.html) ? d.html.join('') : d.html;
+  if (html && html.trim()) {
+    const clean = DOMPurify.sanitize(html, {
+      FORCE_BODY: true,
+      ADD_TAGS: ['style'],
+      USE_PROFILES: { html: true }
+    });
+    body.innerHTML = clean;
+    body.classList.remove('text-body');
+  } else if (d.text && d.text.trim()) {
+    body.innerHTML = esc(d.text);
+    body.classList.add('text-body');
+  } else {
+    body.innerHTML = '<p style="color:var(--text3)">(Empty message)</p>';
+    body.classList.remove('text-body');
+  }
+  // neutralize links
+  body.querySelectorAll('a').forEach(a => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+
+  // mark-read button state
+  const seen = !!d.seen;
+  const markBtn = target === 'reader' ? $('#btnMarkRead') : $('#sheetMark');
+  markBtn.querySelector('i').className = seen ? 'ph ph-envelope-simple' : 'ph ph-envelope-open';
+  markBtn.setAttribute('aria-label', seen ? 'Mark as unread' : 'Mark as read');
+}
+
+/* ================= READER / SHEET CONTROLS ================= */
+function closeReader(){
+  state.selectedId = null;
+  $$('.msg-item').forEach(el => el.classList.remove('active'));
+  $('#readerContent').classList.add('hidden');
+  $('#readerEmpty').classList.remove('hidden');
+}
+
+function openSheet(){
+  const overlay = $('#sheetOverlay'), sheet = $('#sheet');
+  overlay.classList.add('show'); overlay.removeAttribute('aria-hidden');
+  sheet.classList.add('open'); sheet.setAttribute('aria-hidden', 'false');
+  document.querySelector('main').setAttribute('aria-hidden', 'true');
+  document.querySelector('.app-header').setAttribute('aria-hidden', 'true');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => $('#sheetClose').focus(), 380);
+}
+function closeSheet(){
+  const overlay = $('#sheetOverlay'), sheet = $('#sheet');
+  sheet.classList.remove('open'); sheet.setAttribute('aria-hidden', 'true');
+  overlay.classList.remove('show'); overlay.setAttribute('aria-hidden', 'true');
+  document.querySelector('main').removeAttribute('aria-hidden');
+  document.querySelector('.app-header').removeAttribute('aria-hidden');
+  document.body.style.overflow = '';
+  state.selectedId = null;
+  $$('.msg-item').forEach(el => el.classList.remove('active'));
+}
+
+/* ================= ATTACHMENTS ================= */
+async function downloadAttachment(url, name){
+  const full = url.startsWith('http') ? url : API + url;
+  try {
+    const res = await fetch(full, { headers: { 'Authorization': 'Bearer ' + state.account.token } });
+    if (!res.ok) throw new Error('bad status');
+    const blob = await res.blob();
+    const objUrl = URL.createObjectURL(blob);
+    state.blobUrls.push(objUrl);
+    const a = document.createElement('a');
+    a.href = objUrl; a.download = name || 'attachment';
+    document.body.appendChild(a); a.click(); a.remove();
+    toast('Download started', 'success');
+  } catch (e) {
+    toast('Download failed', 'error');
+  }
+}
+function revokeBlobs(){ state.blobUrls.forEach(u => URL.revokeObjectURL(u)); state.blobUrls = []; }
+
+/* ================= ACTIONS ================= */
+async function copyText(text){
+  try { await navigator.clipboard.writeText(text); return true; }
+  catch (e) {
+    const ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    const ok = document.execCommand('copy'); ta.remove();
+    return ok;
+  }
+}
+async function copyAddress(btn){
+  const ok = await copyText(state.account.address);
+  const icon = btn.querySelector('i');
+  const prev = icon.className;
+  btn.style.transform = 'scale(.9)';
+  icon.className = 'ph ph-check';
+  const feedback = $('#copyFeedback');
+  if (feedback) { feedback.classList.add('show'); setTimeout(() => feedback.classList.remove('show'), 1800); }
+  toast(ok ? 'Address copied to clipboard' : 'Copy failed', ok ? 'success' : 'error');
+  setTimeout(() => { btn.style.transform = ''; icon.className = prev; }, 1600);
+}
+
+function toggleTheme(){
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyTheme();
+  try { localStorage.setItem(LS_THEME, state.theme); } catch (e) {}
+}
+function applyTheme(){
+  document.documentElement.dataset.theme = state.theme;
+  const i = $('#btnTheme i');
+  i.className = state.theme === 'dark' ? 'ph ph-sun-dim' : 'ph ph-moon-stars';
+}
+
+async function deleteMessage(id){
+  try { await api('/messages/' + id, { method: 'DELETE' }); } catch (e) {}
+  if (state.selectedId === id) { closeSheet(); closeReader(); }
+  const el = state.msgEls.get(id); el?.remove();
+  state.msgEls.delete(id); state.ids.delete(id);
+  state.messages = state.messages.filter(m => m.id !== id);
+  updateEmptyState(); updateCounts();
+  toast('Message deleted', 'success');
+  revokeBlobs();
+}
+
+function toggleMark(id){
+  const msg = state.messages.find(m => m.id === id);
+  if (!msg) return;
+  const next = !msg.seen;
+  msg.seen = next;
+  updateMsgSeen(id, next);
+  const btn = isDesktop() ? $('#btnMarkRead') : $('#sheetMark');
+  btn.querySelector('i').className = next ? 'ph ph-envelope-simple' : 'ph ph-envelope-open';
+  btn.setAttribute('aria-label', next ? 'Mark as unread' : 'Mark as read');
+  api('/messages/' + id, { method: 'PATCH', body: { seen: next } }).catch(() => {});
+}
+
+function newAddressFlow(){
+  confirmDialog(
+    'This wipes the current inbox and generates a fresh address. Continue?',
+    async () => {
+      const old = state.account;
+      clearSession();
+      revokeBlobs();
+      if (old?.token && old?.id) api('/accounts/' + old.id, { method: 'DELETE' }).catch(() => {});
+      showSetup();
+      toast('Fresh address generated', 'success');
+    }
+  );
+}
+
+/* ================= TOAST / CONFIRM ================= */
+function toast(msg, type = 'success'){
+  const icons = { success: 'ph-check-circle', error: 'ph-warning-circle', info: 'ph-info', mail: 'ph-bell-ringing' };
+  const t = document.createElement('div');
+  t.className = 'toast glass ' + type;
+  t.innerHTML = `<i class="ph ${icons[type] || icons.info}"></i><span>${esc(msg)}</span>`;
+  $('#toasts').appendChild(t);
+  requestAnimationFrame(() => t.classList.add('show'));
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 320); }, 2600);
+}
+
+function confirmDialog(text, onYes){
+  $('#confirmText').textContent = text;
+  const modal = $('#confirmModal');
+  modal.classList.remove('hidden');
+  const yes = $('#confirmYes'), no = $('#confirmNo');
+  yes.onclick = () => { modal.classList.add('hidden'); onYes(); };
+  no.onclick = () => modal.classList.add('hidden');
+  modal.addEventListener('click', e => { if (e.target === modal) modal.classList.add('hidden'); });
+  yes.focus();
+}
+
+/* ================= MOBILE GESTURES ================= */
+let pullStart = null, pullDy = 0;
+$('#msgList').addEventListener('touchstart', e => {
+  if (isMobile() && window.scrollY <= 0 && !state.refreshing && state.account) {
+    pullStart = e.touches[0].clientY;
+  }
+}, { passive: true });
+$('#msgList').addEventListener('touchmove', e => {
+  if (pullStart == null) return;
+  const dy = e.touches[0].clientY - pullStart;
+  if (dy > 0 && Math.abs(dy) > Math.abs(e.touches[0].clientX - pullStart)) {
+    pullDy = dy;
+    const hint = $('#pullHint');
+    hint.textContent = dy > 70 ? 'Release to refresh' : 'Pull to refresh';
+    hint.classList.add('show');
+    e.preventDefault?.();
+  }
+}, { passive: false });
+$('#msgList').addEventListener('touchend', () => {
+  if (pullStart == null) return;
+  $('#pullHint').classList.remove('show');
+  const dy = pullDy; pullStart = null; pullDy = 0;
+  if (dy > 70) refreshMessages();
+}, { passive: true });
+
+// swipe-left to delete
+let swipeStartX = null;
+$('#msgList').addEventListener('touchstart', e => {
+  const item = e.target.closest('.msg-item');
+  if (item) swipeStartX = e.touches[0].clientX;
+}, { passive: true });
+$('#msgList').addEventListener('touchend', e => {
+  if (swipeStartX == null) return;
+  const item = e.target.closest('.msg-item');
+  const dx = swipeStartX - e.changedTouches[0].clientX;
+  const dy = Math.abs(e.changedTouches[0].clientY - pullStart || 0);
+  swipeStartX = null;
+  if (item && dx > 70 && dx > dy * 1.5) confirmDialog('Delete this message?', () => deleteMessage(item.dataset.id));
+}, { passive: true });
+
+// sheet drag-to-close
+let dragY = null;
+$('#sheetHandle').addEventListener('touchstart', e => {
+  dragY = e.touches[0].clientY;
+  const sheet = $('#sheet'); sheet.style.transition = 'none';
+}, { passive: true });
+document.addEventListener('touchmove', e => {
+  if (dragY == null) return;
+  const dy = e.touches[0].clientY - dragY;
+  if (dy > 0) $('#sheet').style.transform = `translateY(${Math.min(dy, window.innerHeight * .6)}px)`;
+}, { passive: true });
+document.addEventListener('touchend', e => {
+  if (dragY == null) return;
+  const dy = e.changedTouches[0].clientY - dragY;
+  const sheet = $('#sheet');
+  sheet.style.transition = ''; sheet.style.transform = '';
+  dragY = null;
+  if (dy > 110) closeSheet();
+}, { passive: true });
+
+/* ================= FOCUS TRAP ================= */
+function trapFocus(container){
+  container.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const focusables = container.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/* ================= EVENTS ================= */
+function bindEvents(){
+  // setup
+  $('#btnDice').addEventListener('click', () => { $('#username').value = randUsername(); });
+  $('#formSetup').addEventListener('submit', async e => {
+    e.preventDefault();
+    const err = $('#setupError');
+    err.classList.remove('show');
+    let username = $('#username').value.trim().toLowerCase();
+    const domain = $('#domainSelect').value;
+    if (!/^[a-z0-9](?:[a-z0-9._-]{1,62})[a-z0-9]$/.test(username) || username.length < 3) {
+      err.textContent = 'Use 3+ letters, numbers, dots, dashes or underscores (start & end with a letter/number).';
+      err.classList.add('show');
+      return;
+    }
+    if (!domain) { err.textContent = 'Pick a domain first.'; err.classList.add('show'); return; }
+    const btn = $('#btnCreate');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ph ph-circle-notch spin"></i> Creating…';
+    try {
+      await createAccount(username, domain);
+      toast('Inbox created — start receiving mail', 'success');
+    } catch (e) {
+      err.textContent = e.status === 429 ? 'Too many requests — try again in a few seconds.'
+        : (e.message && e.message.includes('address') ? e.message : 'Could not create inbox — try again.');
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = 'Create Inbox <i class="ph ph-arrow-right"></i>';
+    }
+  });
+
+  // header
+  $('#btnTheme').addEventListener('click', toggleTheme);
+  $('#btnRefresh').addEventListener('click', () => {
+    if (state.refreshing) { toast('Already refreshing', 'info'); return; }
+    refreshMessages();
+  });
+  $('#btnRefreshBottom').addEventListener('click', () => {
+    if (state.refreshing) { toast('Already refreshing', 'info'); return; }
+    refreshMessages();
+  });
+  $('#btnNewAddress').addEventListener('click', newAddressFlow);
+  $('#btnNewBottom').addEventListener('click', newAddressFlow);
+
+  // address
+  $('#btnCopy').addEventListener('click', e => copyAddress(e.currentTarget));
+  $('#btnCopyBottom').addEventListener('click', e => copyAddress(e.currentTarget));
+  $('#btnQR').addEventListener('click', openQR);
+  $('#btnCloseQR').addEventListener('click', () => $('#qrModal').classList.add('hidden'));
+  $('#qrModal').addEventListener('click', e => { if (e.target === $('#qrModal')) $('#qrModal').classList.add('hidden'); });
+
+  // reader (desktop)
+  $('#btnCloseReader').addEventListener('click', closeReader);
+  $('#btnMarkRead').addEventListener('click', () => state.selectedId && toggleMark(state.selectedId));
+  $('#btnDeleteMsg').addEventListener('click', () => {
+    if (!state.selectedId) return;
+    confirmDialog('Delete this message?', () => deleteMessage(state.selectedId));
+  });
+
+  // sheet (mobile)
+  $('#sheetClose').addEventListener('click', closeSheet);
+  $('#sheetMark').addEventListener('click', () => state.selectedId && toggleMark(state.selectedId));
+  $('#sheetDelete').addEventListener('click', () => {
+    if (!state.selectedId) return;
+    confirmDialog('Delete this message?', () => deleteMessage(state.selectedId));
+  });
+  $('#sheetOverlay').addEventListener('click', closeSheet);
+
+  // attachment downloads (delegated)
+  $$('#readerAtts, #sheetAtts').forEach(el => {
+    el.addEventListener('click', e => {
+      const btn = e.target.closest('[data-dl]');
+      if (btn) downloadAttachment(btn.dataset.dl, btn.dataset.name);
+    });
+  });
+
+  // keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      if (!$('#sheet').classList.contains('open') === false && $('#sheet').classList.contains('open')) { closeSheet(); }
+      else if (!$('#qrModal').classList.contains('hidden')) { $('#qrModal').classList.add('hidden'); }
+      else if (!$('#confirmModal').classList.contains('hidden')) { $('#confirmModal').classList.add('hidden'); }
+      else if (!$('#readerContent').classList.contains('hidden')) { closeReader(); }
+    }
+  });
+
+  trapFocus($('#sheet'));
+  trapFocus($('#qrModal'));
+  trapFocus($('#confirmModal'));
+
+  // relative-time ticker
+  setInterval(() => {
+    $$('.msg-time').forEach(el => { if (el.dataset.time) el.textContent = timeAgo(el.dataset.time); });
+  }, 30000);
+}
+
+function openQR(){
+  const box = $('#qrBox');
+  box.innerHTML = '';
+  $('#qrAddr').textContent = state.account.address;
+  try {
+    new QRCode(box, {
+      text: state.account.address,
+      width: 180, height: 180,
+      colorDark: '#0f172a', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    $('#qrModal').classList.remove('hidden');
+  } catch (e) { toast('QR unavailable', 'error'); }
+}
+
+/* ================= INIT ================= */
+async function init(){
+  applyTheme();
+  bindEvents();
+  await loadDomains();
+
+  const saved = loadSession();
+  if (saved?.address && saved?.password && saved?.token) {
+    state.account = saved;
+    enterApp();
+    refreshMessages(true).catch(() => {});
+  } else {
+    showSetup();
+  }
+}
+init();
+</script>
 </body>
 </html>
